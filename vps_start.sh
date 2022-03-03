@@ -70,7 +70,7 @@ init(){
 
   # 安装oh-my-zsh
   log "安装oh-my-zsh请输入y，以进入新shell继续执行后续美化步骤~"
-  sh -c "$(curl -fsSL https://raw.fastgit.org/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
   log "确认已输入y进入新shell后，再次执行本脚本！"
 }
 

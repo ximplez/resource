@@ -66,6 +66,8 @@ init(){
   if [[ $gitConf == 'y' ]] ;then 
     showBlue "加速域名：https://hub.fastgit.xyz/"
     git config --global url."https://hub.fastgit.xyz/".insteadOf "https://github.com/" 
+  else
+    git config --global --unset url."https://hub.fastgit.xyz/".insteadOf "https://github.com/" 
   fi
 
   # 安装oh-my-zsh
@@ -191,6 +193,8 @@ SystemDD(){
   if [[ $dd != 'y' ]] ;then 
     Start
   else 
+    apt-get install -y xz-utils openssl gawk file
+    yum install -y xz-utils openssl gawk file
     wget --no-check-certificate -O AutoReinstall.sh https://git.io/AutoReinstall.sh && bash AutoReinstall.sh
   fi
 }

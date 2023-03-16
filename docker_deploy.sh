@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while getopts ":i:e:u:p:a" opt
+while getopts ":i:e:u:p:a:" opt
 do
     case $opt in
         i)
@@ -31,49 +31,48 @@ do
     esac
 done
 
-echo '[INFO] 开始执行脚本 ...'
-echo '[INFO] 当前路径 :'
-echo `pwd`
-echo '[INFO] 当前路径文件 ...'
-echo `ls`
-echo '[INFO] 开始环境准备 ...'
+echo -e '[INFO] 开始执行脚本 ...\n'
+echo -e '[INFO] 当前路径 :\n'
+echo -e `pwd`
+echo -e '[INFO] 当前路径文件 ...\n'
+echo -e `ls`
+echo -e '\n[INFO] 开始环境准备 ...\n'
 REGISTRY=${IMAGE_NAME%%/*}
 tmp=${IMAGE_NAME##*/}
 PROJECT_NAME=${tmp%:*}
 CONTAINER_NAME=$PROJECT_NAME-$BUILD_ENV
 BASE_IMAGE_NAME=${IMAGE_NAME%:*}
-printf "env:
-    IMAGE_NAME=%s
-    BASE_IMAGE_NAME=%s
-    REGISTRY=%s
-    BUILD_ENV=%s
-    PROJECT_NAME=%s
-    CONTAINER_NAME=%s
-    DOCKER_RUN_ARGS=%s
-end
-" $IMAGE_NAME $BASE_IMAGE_NAME $REGISTRY $BUILD_ENV $PROJECT_NAME $CONTAINER_NAME $DOCKER_RUN_ARGS
-echo '[INFO] 环境准备完成 ...'
+echo -e "IMAGE_NAME=$IMAGE_NAME\n" 
+echo -e "BASE_IMAGE_NAME=$BASE_IMAGE_NAME\n"
+echo -e "REGISTRY=$REGISTRY\n"
+echo -e "BUILD_ENV=$BUILD_ENV\n"
+echo -e "PROJECT_NAME=$PROJECT_NAME\n" 
+echo -e "CONTAINER_NAME=$CONTAINER_NAME\n" 
+echo -e "DOCKER_USERNAME=$DOCKER_USERNAME\n" 
+echo -e "DOCKER_PASSWORD=$DOCKER_PASSWORD\n" 
+echo -e "DOCKER_RUN_ARGS=$DOCKER_RUN_ARGS\n"
+echo -e "\n[INFO] 环境准备完成 ...\n"
 if [[ $DOCKER_USERNAME ]] ;then 
-    echo "[INFO] 登陆 $REGISTRY --- user: $DOCKER_USERNAME ..."
+    echo -e "[INFO] 登陆 $REGISTRY #user: $DOCKER_USERNAME\n"
     res=`cat $DOCKER_PASSWORD | docker login $REGISTRY --username=$DOCKER_USERNAME --password-stdin`
     if [[ $res =~ "Succeeded" ]] ;then
-        echo "[INFO] 登陆成功"
+        echo -e "[INFO] 登陆成功\n"
     else
-        echo "[ERROR] 登陆失败"
-        echo $res
-        exit 1;
+        echo -e "[ERROR] 登陆失败\n"
+        echo -e $res
+        # exit 1
     fi
 fi
-echo "[INFO] 停止容器 $CONTAINER_NAME..."
-echo `docker stop $CONTAINER_NAME`
-echo "[INFO] 删除容器 $CONTAINER_NAME..."
-echo `docker rm $CONTAINER_NAME`
-echo "[INFO] 删除镜像 $BASE_IMAGE_NAME..."
-echo `docker rmi -f $BASE_IMAGE_NAME`
-echo "[INFO] 拉取镜像 $IMAGE_NAME..."
-echo `docker pull $IMAGE_NAME`
-echo "[INFO] 启动镜像 $CONTAINER_NAME..."
+echo -e "[INFO] 停止容器: $CONTAINER_NAME\n"
+echo -e `docker stop $CONTAINER_NAME`
+echo -e "[INFO] 删除容器: $CONTAINER_NAME\n"
+echo -e `docker rm $CONTAINER_NAME`
+echo -e "[INFO] 删除镜像: $BASE_IMAGE_NAME\n"
+echo -e `docker rmi `docker images | grep $BASE_IMAGE_NAME | awk '{print $3}'``
+echo -e "[INFO] 拉取镜像: $IMAGE_NAME\n"
+echo -e `docker pull $IMAGE_NAME`
+echo -e "[INFO] 启动镜像: $CONTAINER_NAME\n"
 set -x
-echo `docker run -d --name $CONTAINER_NAME -v /opt/applogs/$PROJECT_NAME:/log $DOCKER_RUN_ARGS $IMAGE_NAME`
-echo "[INFO] 启动完成!"
+echo -e `docker run -d --name $CONTAINER_NAME -v /opt/applogs/$PROJECT_NAME:/log $DOCKER_RUN_ARGS $IMAGE_NAME`
+echo -e "[INFO] 启动完成!"
 exit 0

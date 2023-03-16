@@ -1,22 +1,27 @@
 #!/bin/bash
 
-while getopts ":i:e:u:p:a:" opt
+while getopts ":i:e:u:p:s:" opt
 do
     case $opt in
         i)
+            # 完整镜像地址:tag
             IMAGE_NAME=$OPTARG
             ;;
         e)
+            # 环境标识
             BUILD_ENV=$OPTARG
             ;;
         u)
+            # docker 用户名
             DOCKER_USERNAME=$OPTARG
             ;;
         p)
-            DOCKER_PASSWORD=$OPTARG
+            # docker 密码保存路径
+            DOCKER_PASSWORD_PATH=$OPTARG
             ;;
-        a)
-            DOCKER_RUN_ARGS=$OPTARG
+        s)
+            # docker运行隐私参数
+            DOCKER_SEC_RUN_ARGS_PATH=$OPTARG
             ;;
         ?)
             echo "未知参数 $OPTARG"
@@ -49,12 +54,13 @@ echo -e "BUILD_ENV=$BUILD_ENV\n"
 echo -e "PROJECT_NAME=$PROJECT_NAME\n" 
 echo -e "CONTAINER_NAME=$CONTAINER_NAME\n" 
 echo -e "DOCKER_USERNAME=$DOCKER_USERNAME\n" 
-echo -e "DOCKER_PASSWORD=$DOCKER_PASSWORD\n" 
-echo -e "DOCKER_RUN_ARGS=$DOCKER_RUN_ARGS\n"
+echo -e "DOCKER_PASSWORD_PATH=$DOCKER_PASSWORD_PATH\n"
+DOCKER_SEC_RUN_ARGS=`cat $DOCKER_SEC_RUN_ARGS_PATH`
+echo -e "DOCKER_SEC_RUN_ARGS_PATH=$DOCKER_SEC_RUN_ARGS\n"
 echo -e "\n[INFO] 环境准备完成 ...\n"
 if [[ $DOCKER_USERNAME ]] ;then 
     echo -e "[INFO] 登陆 $REGISTRY #user: $DOCKER_USERNAME\n"
-    res=`cat $DOCKER_PASSWORD | docker login $REGISTRY --username=$DOCKER_USERNAME --password-stdin`
+    res=`cat $DOCKER_PASSWORD_PATH | docker login $REGISTRY --username=$DOCKER_USERNAME --password-stdin`
     if [[ $res =~ "Succeeded" ]] ;then
         echo -e "[INFO] 登陆成功\n"
     else
@@ -73,6 +79,6 @@ echo -e "[INFO] 拉取镜像: $IMAGE_NAME\n"
 echo -e `docker pull $IMAGE_NAME`
 echo -e "[INFO] 启动镜像: $CONTAINER_NAME\n"
 set -x
-echo -e `docker run -d --name $CONTAINER_NAME -v /opt/applogs/$PROJECT_NAME:/log $DOCKER_RUN_ARGS $IMAGE_NAME`
+echo -e `docker run -d --name $CONTAINER_NAME -v /opt/applogs/$PROJECT_NAME:/log $DOCKER_SEC_RUN_ARGS $IMAGE_NAME`
 echo -e "[INFO] 启动完成!"
 exit 0

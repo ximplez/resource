@@ -55,7 +55,7 @@ end
 echo '[INFO] 环境准备完成 ...'
 if [[ $DOCKER_USERNAME ]] ;then 
     echo "[INFO] 登陆 $REGISTRY --- user: $DOCKER_USERNAME ..."
-    res=`echo $DOCKER_PASSWORD | docker login $REGISTRY --username=$DOCKER_USERNAME --password-stdin`
+    res=`cat $DOCKER_PASSWORD | docker login $REGISTRY --username=$DOCKER_USERNAME --password-stdin`
     if [[ $res =~ "Succeeded" ]] ;then
         echo "[INFO] 登陆成功"
     else

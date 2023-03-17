@@ -21,7 +21,7 @@ do
             ;;
         s)
             # docker运行隐私参数
-            DOCKER_SEC_RUN_ARGS_PATH=$OPTARG
+            DOCKER_SEC_RUN_ARGS=$OPTARG
             ;;
         ?)
             echo "未知参数 $OPTARG"
@@ -55,8 +55,11 @@ echo -e "PROJECT_NAME=$PROJECT_NAME\n"
 echo -e "CONTAINER_NAME=$CONTAINER_NAME\n" 
 echo -e "DOCKER_USERNAME=$DOCKER_USERNAME\n" 
 echo -e "DOCKER_PASSWORD_PATH=$DOCKER_PASSWORD_PATH\n"
-DOCKER_SEC_RUN_ARGS=`cat $DOCKER_SEC_RUN_ARGS_PATH`
-echo -e "DOCKER_SEC_RUN_ARGS_PATH=$DOCKER_SEC_RUN_ARGS\n"
+echo "DOCKER_SEC_RUN_ARGS=$DOCKER_SEC_RUN_ARGS\n"
+
+run_code="docker run -d --name $CONTAINER_NAME $DOCKER_SEC_RUN_ARGS $IMAGE_NAME"
+echo "run order: $run_code"
+
 echo -e "\n[INFO] 环境准备完成 ...\n"
 if [[ $DOCKER_USERNAME ]] ;then 
     echo -e "[INFO] 登陆 $REGISTRY #user: $DOCKER_USERNAME\n"
@@ -79,6 +82,6 @@ echo -e "[INFO] 拉取镜像: $IMAGE_NAME\n"
 echo -e `docker pull $IMAGE_NAME`
 echo -e "[INFO] 启动镜像: $CONTAINER_NAME\n"
 set -x
-echo -e `docker run -d --name $CONTAINER_NAME -v /opt/applogs/$PROJECT_NAME:/log $DOCKER_SEC_RUN_ARGS $IMAGE_NAME`
+echo -e `$run_code`
 echo -e "[INFO] 启动完成!"
 exit 0

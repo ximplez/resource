@@ -69,7 +69,7 @@ if [[ $DOCKER_USERNAME ]] ;then
     else
         echo -e "[ERROR] 登陆失败\n"
         echo -e $res
-        # exit 1
+        exit 1
     fi
 fi
 echo -e "[INFO] 停止容器: $CONTAINER_NAME\n"

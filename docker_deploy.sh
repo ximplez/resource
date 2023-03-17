@@ -68,7 +68,7 @@ echo -e "DOCKER_USERNAME=$DOCKER_USERNAME\n"
 echo -e "DOCKER_PASSWORD_PATH=$DOCKER_PASSWORD_PATH\n"
 echo -e "DOCKER_RUN_ARGS=$DOCKER_RUN_ARGS\n"
 
-run_code="docker run -d --name $CONTAINER_NAME $DOCKER_RUN_ARGS $IMAGE_NAME"
+run_code="docker run -d --name $CONTAINER_NAME -v /opt/logs/$PROJECT_NAME:/log $DOCKER_RUN_ARGS $IMAGE_NAME"
 echo "run order: $run_code"
 
 echo -e "\n[INFO] 环境准备完成 ...\n"

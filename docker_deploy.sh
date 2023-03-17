@@ -5,7 +5,7 @@ do
     case $opt in
         i)
             # 完整镜像地址:tag
-            IMAGE_NAME=$OPTARG
+            IMAGE_TAG=$OPTARG
             ;;
         e)
             # 环境标识
@@ -21,7 +21,7 @@ do
             ;;
         s)
             # docker运行隐私参数
-            DOCKER_SEC_RUN_ARGS=$OPTARG
+            DOCKER_RUN_ARGS=$OPTARG
             ;;
         ?)
             echo "未知参数 $OPTARG"
@@ -42,22 +42,33 @@ echo -e `pwd`
 echo -e '[INFO] 当前路径文件 ...\n'
 echo -e `ls`
 echo -e '\n[INFO] 开始环境准备 ...\n'
-REGISTRY=${IMAGE_NAME%%/*}
-tmp=${IMAGE_NAME##*/}
-PROJECT_NAME=${tmp%:*}
+#   % 表示匹配方式为从右向左匹配，在第一个字符匹配成功后结束
+#   %% 表示匹配方式为从右向左匹配，在最后一个字符匹配成功后结束
+#   # 表示匹配方式为从左向右匹配，在第一个字符匹配成功后结束
+#   ## 表示匹配方式为从左向右匹配，在最后一个字符匹配成功后结束
+#   * 表示删除，在匹配字符的右边表示删除不匹配就删除字符右边的
+REGISTRY=${IMAGE_TAG%%/*}
+BASE_IMAGE_NAME=${IMAGE_TAG%%:*}
+PROJECT_NAME=${BASE_IMAGE_NAME##*/}
 CONTAINER_NAME=$PROJECT_NAME-$BUILD_ENV
-BASE_IMAGE_NAME=${IMAGE_NAME%:*}
-echo -e "IMAGE_NAME=$IMAGE_NAME\n" 
+# 如果tag包含latest，就用latest，否则用最后一个tag运行
+if [[ $IMAGE_TAG =~ 'latest' ]] ;then 
+    IMAGE_NAME=$BASE_IMAGE_NAME:latest
+else
+    IMAGE_NAME=$BASE_IMAGE_NAME:${IMAGE_TAG##*:}
+fi
+echo -e "IMAGE_TAG=$IMAGE_TAG\n" 
 echo -e "BASE_IMAGE_NAME=$BASE_IMAGE_NAME\n"
+echo -e "IMAGE_NAME=$IMAGE_NAME\n"
 echo -e "REGISTRY=$REGISTRY\n"
 echo -e "BUILD_ENV=$BUILD_ENV\n"
 echo -e "PROJECT_NAME=$PROJECT_NAME\n" 
 echo -e "CONTAINER_NAME=$CONTAINER_NAME\n" 
 echo -e "DOCKER_USERNAME=$DOCKER_USERNAME\n" 
 echo -e "DOCKER_PASSWORD_PATH=$DOCKER_PASSWORD_PATH\n"
-echo "DOCKER_SEC_RUN_ARGS=$DOCKER_SEC_RUN_ARGS\n"
+echo -e "DOCKER_RUN_ARGS=$DOCKER_RUN_ARGS\n"
 
-run_code="docker run -d --name $CONTAINER_NAME $DOCKER_SEC_RUN_ARGS $IMAGE_NAME"
+run_code="docker run -d --name $CONTAINER_NAME $DOCKER_RUN_ARGS $IMAGE_NAME"
 echo "run order: $run_code"
 
 echo -e "\n[INFO] 环境准备完成 ...\n"

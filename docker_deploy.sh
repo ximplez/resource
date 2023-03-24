@@ -88,7 +88,7 @@ echo -e `docker stop $CONTAINER_NAME`
 echo -e "[INFO] 删除容器: $CONTAINER_NAME\n"
 echo -e `docker rm $CONTAINER_NAME`
 echo -e "[INFO] 删除镜像: $BASE_IMAGE_NAME\n"
-echo -e `docker rmi `docker images | grep $BASE_IMAGE_NAME | awk '{print $3}'``
+echo -e `docker rmi `docker images | grep $BASE_IMAGE_NAME | awk "{print $3}"``
 echo -e "[INFO] 拉取镜像: $IMAGE_NAME\n"
 echo -e `docker pull $IMAGE_NAME`
 echo -e "[INFO] 启动镜像: $CONTAINER_NAME\n"

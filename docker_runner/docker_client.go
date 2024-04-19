@@ -22,6 +22,7 @@ func init() {
 		logfError("[initClient] Unable to create docker client")
 		panic(err)
 	}
+	c.NegotiateAPIVersion(context.Background())
 	cl = c
 }
 

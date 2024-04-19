@@ -122,7 +122,7 @@ func ContainerStart(cfg *DockerRunConfig) error {
 			}
 			hostConfig.PortBindings[p] = append(hostConfig.PortBindings[p], nat.PortBinding{
 				HostIP:   "0.0.0.0",
-				HostPort: cfg.Port[p1],
+				HostPort: p1,
 			})
 		}
 	}

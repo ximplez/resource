@@ -79,17 +79,22 @@ func ContainerStop(name string) error {
 	return cl.ContainerStop(context.Background(), ct.ID, container.StopOptions{})
 }
 
-// 删除容器
-func ContainerRemove(name string) error {
+// 停止并删除容器
+func ContainerStopAndRemove(name string) error {
 	ct, err := findContainerByName(name)
 	if err != nil {
 		return err
 	}
 	if ct == nil {
-		logfInfo("[ContainerRemove] container is nil. name=%s", name)
+		logfInfo("[ContainerStopAndRemove] container is nil. name=%s", name)
 		return nil
 	}
-	logfInfo("[ContainerRemove] find container by name. container=%s", ToJSONString(ct))
+	logfInfo("[ContainerStopAndRemove] find container by name. container=%s", ToJSONString(ct))
+	if err := cl.ContainerStop(context.Background(), ct.ID, container.StopOptions{}); err != nil {
+		return err
+	}
+	logfInfo("[ContainerStopAndRemove] stop end.")
+	defer logfInfo("[ContainerStopAndRemove] remove end.")
 	return cl.ContainerRemove(context.Background(), ct.ID, container.RemoveOptions{})
 }
 
@@ -98,7 +103,7 @@ func ContainerStart(cfg *DockerRunConfig) error {
 	logfInfo("[ContainerStart] start. cfg=%s", ToJSONString(cfg))
 	config := container.Config{
 		Image: cfg.buildImageFullName(),
-		Env:   []string{"MYSQL_ROOT_PASSWORD", "123456"},
+		Env:   []string{},
 	}
 	hostConfig := container.HostConfig{
 		PortBindings: make(nat.PortMap),

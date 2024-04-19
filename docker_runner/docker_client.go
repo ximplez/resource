@@ -113,7 +113,11 @@ func ContainerStart(cfg *DockerRunConfig) error {
 	}
 	if len(cfg.Port) > 0 {
 		for p1, p2 := range cfg.Port {
-			hostConfig.PortBindings[nat.Port(p2)] = []nat.PortBinding{
+			p, err := nat.NewPort("tcp", p2)
+			if err != nil {
+				return err
+			}
+			hostConfig.PortBindings[p] = []nat.PortBinding{
 				{
 					HostIP:   "0.0.0.0",
 					HostPort: cfg.Port[p1],

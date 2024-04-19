@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"github.com/docker/go-connections/nat"
 
 	"github.com/docker/docker/api/types"
@@ -115,11 +116,7 @@ func ContainerStart(cfg *DockerRunConfig) error {
 	}
 	if len(cfg.Mount) > 0 {
 		for m1, m2 := range cfg.Mount {
-			hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
-				Type:   mount.TypeBind,
-				Source: m1,
-				Target: m2,
-			})
+			hostConfig.Binds = append(hostConfig.Binds, fmt.Sprintf("%s:%s", m1, m2))
 		}
 	}
 	create, err := cl.ContainerCreate(context.Background(),

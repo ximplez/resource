@@ -62,7 +62,9 @@ func ImagePull(cfg *DockerRunConfig) error {
 // ======================  容器操作 ======================
 // 列出容器
 func ContainerList() ([]types.Container, error) {
-	return cl.ContainerList(context.Background(), container.ListOptions{})
+	return cl.ContainerList(context.Background(), container.ListOptions{
+		All: true,
+	})
 }
 
 // 停止容器

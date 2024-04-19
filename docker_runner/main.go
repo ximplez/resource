@@ -39,10 +39,7 @@ func run(path string) error {
 	if err := LoginDocker(runCfg.RegistryName); err != nil {
 		return err
 	}
-	if err := ContainerStop(runCfg.Name); err != nil {
-		return err
-	}
-	if err := ContainerRemove(runCfg.Name); err != nil {
+	if err := ContainerStopAndRemove(runCfg.Name); err != nil {
 		return err
 	}
 	if err := ImagePull(runCfg); err != nil {

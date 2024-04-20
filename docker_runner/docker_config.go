@@ -6,9 +6,8 @@ import (
 	"os"
 )
 
-const CONFIG_NAME = "docker_config.json"
-
-type RegistryName string
+const REGISTRY_CONFIG_NAME = "docker_registry.json"
+const DOCKER_CONFIG_KEY = "dockerConfig"
 
 type DockerSecret struct {
 	Registry string `json:"registry"`
@@ -42,17 +41,17 @@ func (c DockerRunConfig) buildImageFullName() string {
 
 func init() {
 	logfInfo("[initConfig] start.")
-	if e, err := PathExists(CONFIG_NAME); err != nil || !e {
-		msg := fmt.Sprintf("[ERROR] DockerConfig not found. CONFIG_NAME=%s\n", CONFIG_NAME)
+	if e, err := PathExists(REGISTRY_CONFIG_NAME); err != nil || !e {
+		msg := fmt.Sprintf("[ERROR] DockerConfig not found. REGISTRY_CONFIG_NAME=%s\n", REGISTRY_CONFIG_NAME)
 		if err != nil {
 			msg = msg + err.Error()
 		}
 		panic(errors.New(msg))
 	}
 
-	conf, err := os.ReadFile(CONFIG_NAME)
+	conf, err := os.ReadFile(REGISTRY_CONFIG_NAME)
 	if err != nil {
-		msg := fmt.Sprintf("[ERROR] DockerConfig read error. CONFIG_NAME=%s\n", CONFIG_NAME)
+		msg := fmt.Sprintf("[ERROR] DockerConfig read error. REGISTRY_CONFIG_NAME=%s\n", REGISTRY_CONFIG_NAME)
 		panic(errors.New(msg + err.Error()))
 	}
 	parseConfig(conf)
@@ -60,23 +59,13 @@ func init() {
 }
 
 func parseConfig(conf []byte) {
-	type DockerSecretJson struct {
-		RegistryName string `json:"registryName"`
-		DockerSecret
-	}
-	var sec = make([]DockerSecretJson, 0)
+	var sec = make(map[string]DockerSecret)
 	ParseJSONFromString(string(conf), &sec)
 	if sec == nil || len(sec) < 1 {
 		logfError("[initConfig] config ParseJSONFromString is empty. conf=%s", string(conf))
 		panic(errors.New("[ERROR] config ParseJSONFromString is empty"))
 	}
-	for _, s := range sec {
-		DockerConfigInstance.Secret[s.RegistryName] = DockerSecret{
-			Registry: s.Registry,
-			Username: s.Username,
-			Password: s.Password,
-		}
-	}
+	DockerConfigInstance.Secret = sec
 }
 
 func ReadDockerRunConfigFromFile(path string) (*DockerRunConfig, error) {
@@ -93,7 +82,13 @@ func ReadDockerRunConfigFromFile(path string) (*DockerRunConfig, error) {
 		panic(errors.New(msg + err.Error()))
 	}
 
-	var cfg = new(DockerRunConfig)
+	var cfg = make(map[string]any)
 	ParseJSONFromString(string(conf), &cfg)
-	return cfg, nil
+	if dc, ok := cfg[DOCKER_CONFIG_KEY]; !ok || dc == nil {
+		msg := fmt.Sprintf("[ERROR] DockerRunConfig is empty. conf=%s\n", string(conf))
+		panic(errors.New(msg + err.Error()))
+	}
+	var runCfg = new(DockerRunConfig)
+	ParseJSONFromString(ToJSONString(cfg[DOCKER_CONFIG_KEY]), &runCfg)
+	return runCfg, nil
 }

@@ -61,14 +61,6 @@ init(){
   apt-get -y update
   echo y | apt-get -y upgrade
   apt-get -y install git zsh curl wget python-pip yum
-  # 配置github反代 （国内才需要）
-  read -p "是否需要git加速（国内才需要）(y/n): " gitConf
-  if [[ $gitConf == 'y' ]] ;then 
-    showBlue "加速域名：https://hub.fastgit.xyz/"
-    git config --global url."https://hub.fastgit.xyz/".insteadOf "https://github.com/" 
-  else
-    git config --global --unset url."https://hub.fastgit.xyz/".insteadOf "https://github.com/" 
-  fi
 
   # 安装oh-my-zsh
   log "安装oh-my-zsh请输入y，以进入新shell继续执行后续美化步骤~"
@@ -105,17 +97,6 @@ beautiful_zsh(){
 
   source ~/.zshrc
   cd ~
-}
-
-# 
-# 安装宝塔
-# 
-install_bt(){
-  log "安装宝塔开始！"
-  # 安装宝塔，自动安装大部分依赖软件
-  echo y | wget -O install.sh http://v7.hostcli.com/install/install-ubuntu_6.0.sh && bash install.sh
-  log "宝塔安装完成！"
-  log '请立即登录宝塔放行自定义的ssh端口！！！！！！'
 }
 
 # 
@@ -193,9 +174,12 @@ SystemDD(){
   if [[ $dd != 'y' ]] ;then 
     Start
   else 
-    apt-get install -y xz-utils openssl gawk file
-    yum install -y xz-utils openssl gawk file
-    wget --no-check-certificate -O AutoReinstall.sh https://git.io/AutoReinstall.sh && bash AutoReinstall.sh
+    read -p '请输入系统密码：' psw
+    if [[ ! $psw ]] ;then 
+      Red_Error '密码 不能为空'
+    fi
+    apt-get update&apt-get install -y xz-utils openssl gawk file
+    wget --no-check-certificate -O dd.sh https://raw.githubusercontent.com/ximplez/resource/main/vps/dd.sh && chmod a+x dd.sh && bash dd.sh -d 12 -v 64 -a -p $psw
   fi
 }
 
@@ -207,7 +191,6 @@ Start(){
     0. 退出
     1. 初始化（默认安装zsh，最后请输入y，切换到新shell，否则无法美化）
     2. ZSH美化（强依赖初始化步骤）
-    3. 安装宝塔
     4. 系统设置
     5. 安装v2ray
     99. 系统DD
@@ -216,7 +199,6 @@ END
   case $step in
       1) init ;;
       2) beautiful_zsh ;;
-      3) install_bt ;;
       4) sys_config ;;
       5) v2ray ;;
       99) SystemDD ;;

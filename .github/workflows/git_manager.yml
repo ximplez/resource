@@ -1,5 +1,5 @@
 ---
-name: BuildDockerRunner
+name: BuildGitManager
 
 permissions:
   contents: write
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'docker_runner/**'
+      - 'git_manager/**'
 
 jobs:
   docker-runner:
@@ -26,7 +26,7 @@ jobs:
       - run: go install github.com/mitchellh/gox@latest # 安装 gox
       - name: Build
         run: |
-          cd docker_runner
+          cd git_manager
           make build-linux-amd64
 
       - name: Commit Changes
@@ -36,5 +36,5 @@ jobs:
           git config --global user.email "ximplez@foxmail.com"
           git config --global user.name "ximplez"
           git add .
-          git commit -m "build docker runner"
+          git commit -m "build git manager"
           git push

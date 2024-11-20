@@ -35,6 +35,9 @@ jobs:
         run: |
           git config --global user.email "ximplez@foxmail.com"
           git config --global user.name "ximplez"
+          git pull
           git add .
+          git pull
           git commit -m "build docker runner"
+          git pull
           git push

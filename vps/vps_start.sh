@@ -86,7 +86,7 @@ beautiful_zsh(){
   ./oh-my-zsh-agnoster-fcamblor/install
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
   cd ~
-  git clone git://github.com/joelthelion/autojump.git
+  git clone git://github.com/wting/autojump.git
   cd autojump && ./install.py
   cd ~ && rm -rf autojump
 

@@ -12,4 +12,4 @@ gox-linux:
 	CGO_ENABLED=0 gox -osarch="linux/amd64 linux/arm64" -output=$(output)
 
 gox-all:
-	CGO_ENABLED=0 gox -osarch="darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64" -output="../exe/git_manager/git_manager_{{.OS}}_{{.Arch}}"
+	CGO_ENABLED=0 gox -osarch="darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64" -output=$(output)

@@ -60,7 +60,7 @@ log(){
 init(){
   apt-get -y update
   echo y | apt-get -y upgrade
-  apt-get -y install git zsh curl wget python-pip yum
+  apt-get -y install git zsh curl wget
 
   # 安装oh-my-zsh
   log "安装oh-my-zsh请输入y，以进入新shell继续执行后续美化步骤~"

@@ -79,16 +79,12 @@ beautiful_zsh(){
     mkdir init
   fi
   cd init
-
-  pip install powerline-status
+  apt-get install autojump -y
 
   git clone https://github.com/fcamblor/oh-my-zsh-agnoster-fcamblor.git
   ./oh-my-zsh-agnoster-fcamblor/install
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
   cd ~
-  git clone git://github.com/wting/autojump.git
-  cd autojump && ./install.py
-  cd ~ && rm -rf autojump
 
   sed -i 's|ZSH_THEME=".*"|ZSH_THEME="agnoster"|' ~/.zshrc
   sed -i '$a source ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' ~/.zshrc
@@ -139,7 +135,7 @@ ssh_config(){
   fi
   showYellow "new Port ====> $port"
   cd ~
-  mkdir .ssh
+  mkdir -p .ssh
   cd .ssh
   curl https://github.com/$name.keys > authorized_keys
   chmod 700 authorized_keys

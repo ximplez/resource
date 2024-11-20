@@ -27,7 +27,7 @@ jobs:
       - name: Build
         run: |
           cd docker_runner
-          make gox-all
+          make build-linux-amd64
 
       - name: Commit Changes
         env:

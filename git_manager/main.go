@@ -95,6 +95,10 @@ func gitClone(url, directory string, privateKey *ssh.PublicKeys) {
 
 func gitCommitAndPush(url, directory, commitMsg string, privateKey *ssh.PublicKeys) {
 	log.Printf("git commitAndPush %s, commitMsg=%s", url, commitMsg)
+	if !isDir(directory) {
+		log.Fatalf("directory is not a directory")
+		return
+	}
 	r, err := git.PlainOpenWithOptions(directory, &git.PlainOpenOptions{
 		DetectDotGit: true,
 	})

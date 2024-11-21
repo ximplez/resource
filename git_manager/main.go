@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	"github.com/go-git/go-git/v5"
@@ -11,38 +13,62 @@ import (
 	"os"
 )
 
+var (
+	handle         string
+	url            string
+	directory      string
+	privateKeyFile string
+	password       string
+	alarmUrl       string
+	detailUrl      string
+)
+
+func initVar() {
+	h := flag.String("h", "", "handle 方式")
+	u := flag.String("u", "", "url")
+	d := flag.String("d", "", "directory")
+	pk := flag.String("p", "", "privateKeyFile")
+	pwd := flag.String("w", "", "password")
+	au := flag.String("au", "", "alarmUrl")
+	du := flag.String("du", "", "detailUrl")
+	flag.Parse()
+	handle = *h
+	url = *u
+	directory = *d
+	password = *pwd
+	privateKeyFile = *pk
+	alarmUrl = *au
+	detailUrl = *du
+}
+
 func main() {
-	act, url, directory, privateKeyFile := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
-	var password string
-	if len(os.Args) == 6 {
-		password = os.Args[5]
-	}
+	initVar()
 	_, err := os.Stat(privateKeyFile)
 	if err != nil {
-		log.Fatalf("read file %s failed %s", privateKeyFile, err.Error())
+		handleError("read file %s failed %s", privateKeyFile, err.Error())
 		return
 	}
 
 	privateKey, err := ssh.NewPublicKeysFromFile("git", privateKeyFile, password)
 	if err != nil {
-		log.Fatalf("generate privateKey failed: %s", err.Error())
+		handleError("generate privateKey failed: %s", err.Error())
 		return
 	}
 
-	switch act {
+	switch handle {
 	case "init":
-		gitInit(directory)
+		gitInit()
 	case "clone":
-		gitClone(url, directory, privateKey)
+		gitClone(privateKey)
 	case "commit&push":
-		gitCommitAndPush(url, directory, "", privateKey)
+		gitCommitAndPush(privateKey)
 	}
 }
 
-func gitInit(directory string) {
+func gitInit() {
 	log.Printf("git init %s ", directory)
 	if !isDir(directory) {
-		log.Fatalf("directory is not a directory")
+		handleError("%s is not a directory", directory)
 		return
 	}
 	repository, err := git.PlainInitWithOptions(directory, &git.PlainInitOptions{
@@ -51,19 +77,19 @@ func gitInit(directory string) {
 		},
 	})
 	if err != nil {
-		log.Fatalf("init failed: %s", err.Error())
+		handleError("init failed: %s", err.Error())
 		return
 	}
 	ref, err := repository.Head()
 	if err != nil {
-		log.Fatalf("get head failed: %s", err.Error())
+		handleError("get head failed: %s", err.Error())
 		return
 	}
 	log.Printf("git init %s success", ref.String())
 	return
 }
 
-func gitClone(url, directory string, privateKey *ssh.PublicKeys) {
+func gitClone(privateKey *ssh.PublicKeys) {
 	// Clone the given repository to the given directory
 	log.Printf("git clone %s => %s", url, directory)
 	r, err := git.PlainClone(directory, false, &git.CloneOptions{
@@ -72,20 +98,20 @@ func gitClone(url, directory string, privateKey *ssh.PublicKeys) {
 		Progress: os.Stdout,
 	})
 	if err != nil {
-		log.Fatalf("clone failed: %s", err.Error())
+		handleError("clone failed: %s", err.Error())
 		return
 	}
 
 	// ... retrieving the branch being pointed by HEAD
 	ref, err := r.Head()
 	if err != nil {
-		log.Fatalf("get head failed: %s", err.Error())
+		handleError("get head failed: %s", err.Error())
 		return
 	}
 	// ... retrieving the commit object
 	commit, err := r.CommitObject(ref.Hash())
 	if err != nil {
-		log.Fatalf("get commit failed: %s", err.Error())
+		handleError("get commit failed: %s", err.Error())
 		return
 	}
 
@@ -93,42 +119,39 @@ func gitClone(url, directory string, privateKey *ssh.PublicKeys) {
 	return
 }
 
-func gitCommitAndPush(url, directory, commitMsg string, privateKey *ssh.PublicKeys) {
-	log.Printf("git commitAndPush %s, commitMsg=%s", url, commitMsg)
+func gitCommitAndPush(privateKey *ssh.PublicKeys) {
+	log.Printf("git commitAndPush %s", url)
 	if !isDir(directory) {
-		log.Fatalf("directory is not a directory")
+		handleError("%s is not a directory", directory)
 		return
 	}
 	r, err := git.PlainOpenWithOptions(directory, &git.PlainOpenOptions{
 		DetectDotGit: true,
 	})
 	if err != nil {
-		log.Fatalf("open repository failed: %s", err.Error())
+		handleError("open repository failed: %s", err.Error())
 		return
 	}
 	r_cfg, err := r.ConfigScoped(config.SystemScope)
 	if err != nil {
-		log.Fatalf("get repostory config failed: %s", err.Error())
+		handleError("get repostory config failed: %s", err.Error())
 		return
 	}
 
 	// ... retrieving the branch being pointed by HEAD
 	wt, err := r.Worktree()
 	if err != nil {
-		log.Fatalf("get worktree failed: %s", err.Error())
+		handleError("get worktree failed: %s", err.Error())
 		return
-	}
-	if commitMsg == "" {
-		commitMsg = "auto commit"
 	}
 	_, err = wt.Add(".")
 	if err != nil {
-		log.Fatalf("git add file failed: %s", err.Error())
+		handleError("git add file failed: %s", err.Error())
 		return
 	}
 	status, err := wt.Status()
 	if err != nil {
-		log.Fatalf("get worktree status failed: %s", err.Error())
+		handleError("get worktree status failed: %s", err.Error())
 		return
 	}
 	if status.IsClean() {
@@ -141,14 +164,14 @@ func gitCommitAndPush(url, directory, commitMsg string, privateKey *ssh.PublicKe
 	log.Printf("worktree is not clean, need to commit")
 	entity, err := openpgp.NewEntity(name, "", email, &packet.Config{})
 	if err != nil {
-		log.Fatalf("generate entity failed: %s", err.Error())
+		handleError("generate entity failed: %s", err.Error())
 		return
 	}
-	commit, err := wt.Commit(commitMsg, &git.CommitOptions{
+	commit, err := wt.Commit("auto commit", &git.CommitOptions{
 		SignKey: entity,
 	})
 	if err != nil {
-		log.Fatalf("git commit failed: %s", err.Error())
+		handleError("git commit failed: %s", err.Error())
 		return
 	}
 	log.Printf("git commit success %s", commit)
@@ -157,7 +180,7 @@ func gitCommitAndPush(url, directory, commitMsg string, privateKey *ssh.PublicKe
 		Progress: os.Stdout,
 	})
 	if err != nil {
-		log.Fatalf("git push failed: %s", err.Error())
+		handleError("git push failed: %s", err.Error())
 		return
 	}
 	log.Printf("git push success %s", commit)
@@ -174,7 +197,6 @@ func getUserNameAndEmailFromCfg(cfg *config.Config) (string, string) {
 	if cfg.Author.Email != "" && cfg.Author.Name != "" {
 		return cfg.Author.Name, cfg.Author.Email
 	}
-
 	if cfg.Committer.Email != "" && cfg.Committer.Name != "" {
 		return cfg.Committer.Name, cfg.Committer.Email
 	}
@@ -187,4 +209,21 @@ func isDir(path string) bool {
 		return false
 	}
 	return s.IsDir()
+}
+
+func handleError(format string, v ...any) {
+	if alarmUrl != "" {
+		_, _, err := Post(alarmUrl, map[string]any{
+			"app":    "GitManager",
+			"title":  "execute failed",
+			"msg":    fmt.Sprintf(format, v),
+			"detail": detailUrl,
+		}, map[string]string{
+			"Content-Type": "application/json",
+		})
+		if err != nil {
+			log.Printf("send alarm failed: %s", err.Error())
+		}
+	}
+	log.Fatalf(format, v)
 }

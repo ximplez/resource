@@ -1,3 +1,7 @@
+一键安装命令：
+debian 12:
+apt-get update && apt-get install -y wget && wget https://raw.githubusercontent.com/ximplez/resource/main/vps/dd.sh && chmod +x dd.sh && ./dd.sh -d 12 -v 64 -a -p [自定义密码] -port [自定义ssh端口，默认22]
+
 说明：​本脚本是Vicer大佬将其Debian、Ubuntu、CentOS、DD Windows一键安装脚本合体了，使用更加方便了。
 
 背景

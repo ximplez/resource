@@ -1,5 +1,7 @@
 init脚本一键运行：
-apt-get update && apt-get install -y curl && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ximplez/resource/main/vps/init.sh)"
+apt-get update && apt-get install -y curl && wget https://raw.githubusercontent.com/ximplez/resource/main/vps/init.sh && chmod +x init.sh && bash init.sh
+或者（github阻塞）：
+apt-get update && apt-get install -y curl && wget https://gcore.jsdelivr.net/gh/ximplez/resource@main/vps/init.sh && chmod +x init.sh && bash init.sh
 
 1. LemonBench
 快速测试 

@@ -3,7 +3,7 @@ module ximplez.com/go/docker_tool
 go 1.22.0
 
 require (
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-connections v0.5.0
 )
 

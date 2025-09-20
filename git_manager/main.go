@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -145,6 +146,10 @@ func gitPull(privateKey *ssh.PublicKeys) {
 		Progress: os.Stdout,
 	})
 	if err != nil {
+		if errors.Is(err, git.NoErrAlreadyUpToDate) {
+			log.Printf("git pull %s success, no need to pull", url)
+			return
+		}
 		handleError("pull failed: %s", err.Error())
 		return
 	}

@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"log"
-	"os"
 )
 
 var (
@@ -60,6 +61,8 @@ func main() {
 		gitInit()
 	case "clone":
 		gitClone(privateKey)
+	case "pull":
+		gitPull(privateKey)
 	case "commit&push":
 		gitCommitAndPush(privateKey)
 	}
@@ -117,6 +120,37 @@ func gitClone(privateKey *ssh.PublicKeys) {
 
 	log.Printf("git clone %s success %s", url, commit)
 	return
+}
+
+func gitPull(privateKey *ssh.PublicKeys) {
+	log.Printf("git pull %s", url)
+	r, err := git.PlainOpenWithOptions(directory, &git.PlainOpenOptions{
+		DetectDotGit: true,
+	})
+	if err != nil {
+		handleError("open repository failed: %s", err.Error())
+		return
+	}
+	err = r.Fetch(&git.FetchOptions{
+		Auth:     privateKey,
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		return
+	}
+	// ... retrieving the branch being pointed by HEAD
+	ref, err := r.Head()
+	if err != nil {
+		handleError("get head failed: %s", err.Error())
+		return
+	}
+	// ... retrieving the commit object
+	commit, err := r.CommitObject(ref.Hash())
+	if err != nil {
+		handleError("get commit failed: %s", err.Error())
+		return
+	}
+	log.Printf("git pull %s success %s", url, commit)
 }
 
 func gitCommitAndPush(privateKey *ssh.PublicKeys) {

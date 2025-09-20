@@ -131,26 +131,25 @@ func gitPull(privateKey *ssh.PublicKeys) {
 		handleError("open repository failed: %s", err.Error())
 		return
 	}
-	err = r.Fetch(&git.FetchOptions{
+	worktree, err := r.Worktree()
+	if err != nil {
+		handleError("get worktree failed: %s", err.Error())
+		return
+	}
+	if worktree == nil {
+		handleError("worktree is nil")
+		return
+	}
+	err = worktree.Pull(&git.PullOptions{
 		Auth:     privateKey,
 		Progress: os.Stdout,
 	})
 	if err != nil {
+		handleError("pull failed: %s", err.Error())
 		return
 	}
-	// ... retrieving the branch being pointed by HEAD
-	ref, err := r.Head()
-	if err != nil {
-		handleError("get head failed: %s", err.Error())
-		return
-	}
-	// ... retrieving the commit object
-	commit, err := r.CommitObject(ref.Hash())
-	if err != nil {
-		handleError("get commit failed: %s", err.Error())
-		return
-	}
-	log.Printf("git pull %s success %s", url, commit)
+	log.Printf("git pull %s success", url)
+	return
 }
 
 func gitCommitAndPush(privateKey *ssh.PublicKeys) {

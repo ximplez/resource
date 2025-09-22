@@ -193,12 +193,12 @@ sysDD(){
   apt-get update && apt-get install -y curl && sh -c $(curl -fsSL https://raw.githubusercontent.com/ximplez/resource/main/vps/dd.sh) -d 12 -v 64 -a -p $pwd -port $port
 }
 
-git(){
-  read -p '请输入全局用户名(默认ximplez)' name
+gitSet(){
+  read -p '请输入全局用户名(默认ximplez):' name
   if [[ ! $name ]] ;then
     name=ximplez
   fi
-  read -p '请输入全局邮箱(默认ximplez@foxmail.com)：' mail
+  read -p '请输入全局邮箱(默认ximplez@foxmail.com):' mail
   if [[ ! $mail ]] ;then
     mail=ximplez@foxmail.com
   fi
@@ -232,7 +232,7 @@ END
       2) zshUpgrade ;;
       4) sys_config ;;
       5) v2ray ;;
-      6) git ;;
+      6) gitSet ;;
       99) sysDD ;;
   esac
   msg "${GREEN}脚本执行完毕！${NOFORMAT}"

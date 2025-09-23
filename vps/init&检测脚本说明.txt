@@ -3,6 +3,9 @@ apt-get update && apt-get install -y curl && wget https://raw.githubusercontent.
 或者（github阻塞）：
 apt-get update && apt-get install -y curl && wget https://gcore.jsdelivr.net/gh/ximplez/resource@main/vps/init.sh && chmod +x init.sh && bash init.sh
 
+tcp加速：
+wget -O tcpx.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh" && chmod +x tcpx.sh && ./tcpx.sh
+
 1. LemonBench
 快速测试 
 如果你的服务器上安装有 curl 工具，请使用以下命令执行脚本：

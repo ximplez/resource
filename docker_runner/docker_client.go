@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 
 	"github.com/docker/docker/api/types"
@@ -52,7 +54,10 @@ func ImagePull(cfg *DockerRunConfig) error {
 	}
 	defer pullReader.Close()
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(pullReader)
+	_, err = buf.ReadFrom(pullReader)
+	if err != nil {
+		return err
+	}
 	s := buf.String()
 	logfInfo("info: %s", s)
 	logfInfo("image pull end")
@@ -111,6 +116,12 @@ func ContainerStart(cfg *DockerRunConfig) error {
 		PortBindings: make(nat.PortMap),
 		Mounts:       make([]mount.Mount, 0),
 	}
+	networkConfig := network.NetworkingConfig{
+		EndpointsConfig: make(map[string]*network.EndpointSettings),
+	}
+	if cfg.NetworkName != "" {
+		networkConfig.EndpointsConfig[cfg.NetworkName] = &network.EndpointSettings{}
+	}
 	if len(cfg.Port) > 0 {
 		for p1, p2 := range cfg.Port {
 			p, err := nat.NewPort("tcp", p2)
@@ -134,7 +145,7 @@ func ContainerStart(cfg *DockerRunConfig) error {
 	create, err := cl.ContainerCreate(context.Background(),
 		&config,
 		&hostConfig,
-		nil,
+		&networkConfig,
 		nil,
 		cfg.Name)
 	if err != nil {

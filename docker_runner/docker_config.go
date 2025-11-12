@@ -32,6 +32,7 @@ type DockerRunConfig struct {
 	Env          map[string]string `json:"env,omitempty"`
 	Mount        map[string]string `json:"mount,omitempty"`
 	Args         string            `json:"args,omitempty"`
+	NetworkName  string            `json:"networkName,omitempty"`
 }
 
 func (c DockerRunConfig) buildImageFullName() string {

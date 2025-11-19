@@ -8,6 +8,9 @@ import (
 
 const REGISTRY_CONFIG_NAME = "docker_registry.json"
 const DOCKER_CONFIG_KEY = "dockerConfig"
+const NOTIFY_WEBHOOK_KEY = "notify_webhook"
+
+var notifyWebhook = ""
 
 type DockerSecret struct {
 	Registry string `json:"registry"`
@@ -88,6 +91,9 @@ func ReadDockerRunConfigFromFile(path string) (*DockerRunConfig, error) {
 	if dc, ok := cfg[DOCKER_CONFIG_KEY]; !ok || dc == nil {
 		msg := fmt.Sprintf("[ERROR] DockerRunConfig is empty. conf=%s\n", string(conf))
 		panic(errors.New(msg + err.Error()))
+	}
+	if nw, ok := cfg[NOTIFY_WEBHOOK_KEY]; ok && nw != nil {
+		notifyWebhook = ToJSONString(nw)
 	}
 	var runCfg = new(DockerRunConfig)
 	ParseJSONFromString(ToJSONString(cfg[DOCKER_CONFIG_KEY]), &runCfg)

@@ -82,7 +82,7 @@ func ContainerStop(name string) error {
 		logfInfo("[ContainerStop] container is nil. name=%s", name)
 		return nil
 	}
-	logfInfo("[ContainerStop] find container by name. container=%s", ToJSONString(ct))
+	// logfInfo("[ContainerStop] find container by name. container=%s", ToJSONString(ct))
 	return cl.ContainerStop(context.Background(), ct.ID, container.StopOptions{})
 }
 
@@ -96,7 +96,7 @@ func ContainerStopAndRemove(name string) error {
 		logfInfo("[ContainerStopAndRemove] container is nil. name=%s", name)
 		return nil
 	}
-	logfInfo("[ContainerStopAndRemove] find container by name. container=%s", ToJSONString(ct))
+	// logfInfo("[ContainerStopAndRemove] find container by name. container=%s", ToJSONString(ct))
 	if err := cl.ContainerStop(context.Background(), ct.ID, container.StopOptions{}); err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func ContainerStopAndRemove(name string) error {
 
 // 启动容器
 func ContainerStart(cfg *DockerRunConfig) error {
-	logfInfo("[ContainerStart] start. cfg=%s", ToJSONString(cfg))
+	logfInfo("[ContainerStart] start.")
 	config := container.Config{
 		Image: cfg.buildImageFullName(),
 		Env:   []string{},

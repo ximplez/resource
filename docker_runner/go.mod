@@ -1,6 +1,6 @@
 module ximplez.com/go/docker_tool
 
-go 1.22.0
+go 1.23.0
 
 require (
 	github.com/docker/docker v25.0.6+incompatible
@@ -28,7 +28,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.25.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.25.0 // indirect
 	go.opentelemetry.io/otel/trace v1.25.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )

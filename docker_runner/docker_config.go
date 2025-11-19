@@ -93,7 +93,11 @@ func ReadDockerRunConfigFromFile(path string) (*DockerRunConfig, error) {
 		panic(errors.New(msg + err.Error()))
 	}
 	if nw, ok := cfg[NOTIFY_WEBHOOK_KEY]; ok && nw != nil {
-		notifyWebhook = ToJSONString(nw)
+		if s, ok := nw.(string); ok && s != "" {
+			notifyWebhook = s
+		} else {
+			notifyWebhook = ToJSONString(nw)
+		}
 	}
 	var runCfg = new(DockerRunConfig)
 	ParseJSONFromString(ToJSONString(cfg[DOCKER_CONFIG_KEY]), &runCfg)

@@ -3,7 +3,12 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"strings"
+)
+
+var (
+	runCfg *DockerRunConfig
 )
 
 func main() {
@@ -16,18 +21,20 @@ func main() {
 	logfInfo("[RUN] dockerRunConfigPath=%s", dockerRunConfigPath)
 
 	if err := run(strings.TrimSpace(dockerRunConfigPath)); err != nil {
+		NotifyFeishu(NewFeishuMsg("🔧 DockerRunner", "❌ Run Failed", err.Error(), ""))
 		logfError("[RUN] error. err=%s", err.Error())
 		panic("RUN error." + err.Error())
 	}
+	NotifyFeishu(NewFeishuMsg("🔧 DockerRunner", "✅ Run Success", "", ""))
 	logfInfo("[RUN] end.")
 }
 
-func run(path string) error {
+func run(path string) (err error) {
 	logfInfo("[RUN] start.")
 	if len(path) < 1 {
 		return errors.New("dockerRunConfigPath is empty")
 	}
-	runCfg, err := ReadDockerRunConfigFromFile(path)
+	runCfg, err = ReadDockerRunConfigFromFile(path)
 	if err != nil {
 		return err
 	}
@@ -35,7 +42,8 @@ func run(path string) error {
 		logfError("[RUN] checkRunConfig fail. runCfg: %s", ToJSONString(runCfg))
 		return errors.New("ReadDockerRunConfigFromFile is nil")
 	}
-	logfInfo("[RUN] DockerRunConfig: %s", ToJSONString(runCfg))
+	// logfInfo("[RUN] DockerRunConfig: %s", ToJSONString(runCfg))
+	NotifyFeishu(NewFeishuMsg("🔧 DockerRunner", fmt.Sprintf("✅ Run Start【%s】", runCfg.buildImageFullName()), ToJSONString(runCfg), ""))
 	if err := LoginDocker(runCfg.RegistryName); err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/go-resty/resty/v2 v2.16.5
 )
 
 require (
@@ -27,7 +28,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.25.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.25.0 // indirect
 	go.opentelemetry.io/otel/trace v1.25.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )

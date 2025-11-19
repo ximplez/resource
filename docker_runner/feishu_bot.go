@@ -1,9 +1,5 @@
 package main
 
-import (
-	"log"
-)
-
 type FeishuMsg struct {
 	App       string `json:"app"`
 	Title     string `json:"title"`
@@ -50,7 +46,7 @@ func NotifyFeishu(msg *FeishuMsg) {
 	// 发送飞书消息
 	_, _, err := Post(notifyWebhook, ToJSONString(msg), nil)
 	if err != nil {
-		log.Printf("NotifyFeishu err:%v, msg:%s", err, ToJSONString(msg))
+		logfError("NotifyFeishu err:%v, msg:%s", err, ToJSONString(msg))
 		return
 	}
 }

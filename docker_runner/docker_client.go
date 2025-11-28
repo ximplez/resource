@@ -108,9 +108,16 @@ func ContainerStopAndRemove(name string) error {
 // 启动容器
 func ContainerStart(cfg *DockerRunConfig) error {
 	logfInfo("[ContainerStart] start.")
+
+	// 将配置中的环境变量map转换为Docker需要的[]string格式
+	envVars := make([]string, 0, len(cfg.Env))
+	for key, value := range cfg.Env {
+		envVars = append(envVars, fmt.Sprintf("%s=%s", key, value))
+	}
+
 	config := container.Config{
 		Image: cfg.buildImageFullName(),
-		Env:   []string{},
+		Env:   envVars,
 	}
 	hostConfig := container.HostConfig{
 		PortBindings: make(nat.PortMap),

@@ -37,7 +37,7 @@ jobs:
           cd ./main/docker_runner
           make build-linux-amd64
           cd ../..
-          mv ./main/exe ./release
+          mv ./main/exe/* ./release/exe/
           rm -rf ./main/exe
 
       - name: Commit Changes

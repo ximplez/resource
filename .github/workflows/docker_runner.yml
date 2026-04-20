@@ -22,6 +22,8 @@ jobs:
         with:
           go-version: '1.22.0'
       - uses: actions/checkout@v4
+        with:
+          ref: release
 
       - run: go install github.com/mitchellh/gox@latest # 安装 gox
       - name: Build

@@ -31,7 +31,13 @@ func init() {
 
 // 登录docker
 func LoginDocker(name string) error {
-	login, err := cl.RegistryLogin(context.Background(), getAuthConfig(name))
+	config := getAuthConfig(name)
+	// 没有配置UserName，公共仓库，不需要登录
+	if config.Username == "" || config.Password == "" {
+		logfInfo("[initClient] Username not provided")
+		return nil
+	}
+	login, err := cl.RegistryLogin(context.Background(), config)
 	if err != nil {
 		return err
 	}

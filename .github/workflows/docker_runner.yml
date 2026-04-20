@@ -28,6 +28,7 @@ jobs:
         run: |
           cd docker_runner
           make build-linux-amd64
+          cd ..
 
       - name: Commit Changes
         env:

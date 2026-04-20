@@ -22,17 +22,28 @@ jobs:
         with:
           go-version: '1.22.0'
       - uses: actions/checkout@v4
+        with:
+          path: main
+
+      - uses: actions/checkout@v4
+        with:
+          ref: release
+          path: release
 
       - run: go install github.com/mitchellh/gox@latest # 安装 gox
       - name: Build
         run: |
-          cd git_manager
+          mkdir -p ./main/exe
+          cd ./main/git_manager
           make build-linux-amd64
+          cd ../..
+          cp -r ./main/exe/** ./release/exe
 
       - name: Commit Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd ./release
           git config --global user.email "ximplez@foxmail.com"
           git config --global user.name "ximplez"
           git pull

@@ -40,6 +40,9 @@ type DockerRunConfig struct {
 
 func (c DockerRunConfig) buildImageFullName() string {
 	ds := DockerConfigInstance.Secret[c.RegistryName]
+	if ds.Registry == "" {
+		return fmt.Sprintf("%s:%s", c.Image, c.Version)
+	}
 	return fmt.Sprintf("%s/%s:%s", ds.Registry, c.Image, c.Version)
 }
 

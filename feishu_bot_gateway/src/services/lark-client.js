@@ -1,4 +1,4 @@
-import * as lark from "@larksuiteoapi/node-sdk";
+import lark from "@larksuiteoapi/node-sdk/lib/index.js";
 import { getAppConfig } from "../config/apps.js";
 import { httpError } from "../lib/errors.js";
 

@@ -3,7 +3,7 @@ import { getLarkClient, unwrapLarkResponse } from "./lark-client.js";
 import { buildTemplateCardContent, parseTemplateCardContent } from "./card-content.js";
 
 export async function sendMessage(payload, env) {
-  const client = getLarkClient(payload.appId, env);
+  const client = await getLarkClient(payload.appId, env);
   const res = await client.im.message.create({
     params: {
       receive_id_type: payload.receiveIdType,
@@ -28,7 +28,7 @@ export async function sendTemplateCard(payload, env) {
   if (payload.messageId) {
     return await updateTemplateCard(payload, env);
   }
-  const client = getLarkClient(payload.appId, env);
+  const client = await getLarkClient(payload.appId, env);
   const receiveIdType = payload.receiveIdType || getDefaultReceiveIdType(payload.appId, env);
   const receiveId = payload.receiveId || getDefaultReceiveId(payload.appId, env);
   let res;
@@ -67,7 +67,7 @@ export async function sendTemplateCard(payload, env) {
 }
 
 export async function updateTemplateCard(payload, env) {
-  const client = getLarkClient(payload.appId, env);
+  const client = await getLarkClient(payload.appId, env);
   const content = buildTemplateCardContent(payload);
   const res = await client.im.message.patch({
     path: {

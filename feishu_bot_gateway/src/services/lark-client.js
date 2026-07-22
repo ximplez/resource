@@ -1,11 +1,11 @@
-import lark from "@larksuiteoapi/node-sdk/lib/index.js";
 import { getAppConfig } from "../config/apps.js";
 import { httpError } from "../lib/errors.js";
 
 const clientCache = new Map();
+let larkSdkPromise = null;
 let defaultHttpConfigured = false;
 
-export function getLarkClient(appId, env) {
+export async function getLarkClient(appId, env) {
   const app = getAppConfig(appId, env);
   const cacheKey = `${app.appId}:${app.appSecret}`;
   const cached = clientCache.get(cacheKey);
@@ -13,7 +13,8 @@ export function getLarkClient(appId, env) {
     return cached;
   }
 
-  const httpInstance = getConfiguredHttpInstance();
+  const lark = await getLarkSdk();
+  const httpInstance = getConfiguredHttpInstance(lark);
   const client = new lark.Client({
     appId: app.appId,
     appSecret: app.appSecret,
@@ -34,7 +35,19 @@ export function unwrapLarkResponse(resp, prefix) {
   return resp.data || {};
 }
 
-function getConfiguredHttpInstance() {
+async function getLarkSdk() {
+  if (!larkSdkPromise) {
+    // The SDK reads __dirname at module initialization. Cloudflare Workers do
+    // not provide it, so define a harmless global before lazy-loading the SDK.
+    if (globalThis.__dirname === undefined) {
+      globalThis.__dirname = "/";
+    }
+    larkSdkPromise = import("@larksuiteoapi/node-sdk/lib/index.js").then((mod) => mod.default || mod);
+  }
+  return await larkSdkPromise;
+}
+
+function getConfiguredHttpInstance(lark) {
   if (!defaultHttpConfigured) {
     lark.defaultHttpInstance.defaults.adapter = "fetch";
     defaultHttpConfigured = true;

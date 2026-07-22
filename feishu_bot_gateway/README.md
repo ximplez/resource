@@ -2,6 +2,8 @@
 
 Cloudflare Workers 上的飞书消息网关。调用方只需要请求统一 HTTP 接口，由 Worker 根据 `appId` 选择对应飞书应用，并向指定接收人发送消息。
 
+内部实现使用飞书官方 Node SDK，并在 Worker 环境下通过 SDK 自带 axios 的 `fetch` adapter 发起请求，由 SDK 自动管理 tenant token 的获取与刷新。
+
 ## API
 
 ### `GET /health`
@@ -39,7 +41,9 @@ curl -X POST 'https://your-worker.example.workers.dev/send' \
 
 飞书模板卡片专用接口。需要鉴权。
 
-该接口只支持飞书卡片模板方式，不支持手写普通卡片结构。Worker 会把请求组装成飞书 `msg_type=interactive`，并生成如下内容：
+该接口只支持飞书卡片模板方式，不支持手写普通卡片结构。未传 `messageId` 时会发送新卡片；传入 `messageId` 时会更新已有卡片。
+
+Worker 会把请求组装成飞书 `msg_type=interactive`，并生成如下内容：
 
 ```json
 {
@@ -70,6 +74,21 @@ curl -X POST 'https://your-worker.example.workers.dev/send' \
 - `templateVariable`: 可选，对应 `template_variable`
 - `content`: 可选，飞书模板卡片内容 JSON 字符串或对象。传入后会优先使用 `content`，此时不需要 `templateId`
 - `receiveIdType` / `receiveId`: 可选。如果应用配置里设置了默认接收人，可以不传
+- `messageId`: 可选。传入后更新该飞书消息卡片；不传则发送新卡片
+
+更新卡片示例：
+
+```json
+{
+  "appId": "cli_xxx",
+  "messageId": "om_xxx",
+  "templateId": "AAq2HMaiGq246",
+  "templateVariable": {
+    "app_name": "yak",
+    "title": "更新后的标题"
+  }
+}
+```
 
 ## 配置
 
@@ -114,6 +133,12 @@ id = "your-kv-namespace-id"
 ```bash
 npm install
 ```
+
+说明：
+
+- 该项目依赖 `@larksuiteoapi/node-sdk`
+- Worker 环境通过 `nodejs_compat` + axios 内置 `fetch` adapter 运行
+- tenant token 由 SDK 自动缓存与刷新，不再在项目代码中手写 token 请求逻辑
 
 语法检查：
 

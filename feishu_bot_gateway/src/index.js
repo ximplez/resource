@@ -48,16 +48,3 @@ export default {
     }
   },
 };
-
-function resolveFetchAdapter(mod) {
-  if (typeof mod === "function") {
-    return mod;
-  }
-  if (mod && typeof mod.default === "function") {
-    return mod.default;
-  }
-  if (mod && typeof mod.createFetchAdapter === "function") {
-    return mod.createFetchAdapter();
-  }
-  throw new Error("axios fetch adapter is not available");
-}

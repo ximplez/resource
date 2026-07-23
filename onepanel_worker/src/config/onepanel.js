@@ -145,7 +145,7 @@ export function resolveNotificationConfig(payload, action, env) {
         envNotificationCard.mainButtonText,
       ),
       mainButtonDisabled: mainButtonDisabled === undefined ? true : mainButtonDisabled,
-      mainButtonEvent: firstNonEmpty(
+      mainButtonEvent: firstMainButtonEvent(
         overrideCard.mainButtonEvent,
         envNotificationCard.mainButtonEvent,
       ),
@@ -304,6 +304,18 @@ function parseOptionalModule(objectValue, jsonValue, field) {
     return {};
   }
   return parseMaybeJsonObject(jsonValue, field, true);
+}
+
+function firstMainButtonEvent(...values) {
+  for (const value of values) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function extractDirectContainerConfig(payload) {

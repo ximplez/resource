@@ -30,7 +30,7 @@ export function newOnePanelCardMessage({
   const normalizedStatus = trimString(status) || (failureInfo ? "failed" : "success");
   const normalizedTitle = trimString(title) || buildDefaultTitle(action, normalizedStatus, containerName);
   const normalizedBaseUrl = trimString(baseUrl);
-  const normalizedMainButtonEvent = trimString(mainButtonEvent);
+  const configuredMainButtonEvent = parseMainButtonEvent(mainButtonEvent);
   return {
     appName: trimString(appName) || "1PanelWorker",
     title: normalizedTitle,
@@ -38,8 +38,8 @@ export function newOnePanelCardMessage({
     content: stringifyMessage(content),
     foot: stringifyMessage(foot),
     mainButtonText: trimString(mainButtonText) || defaultMainButtonText(normalizedStatus),
-    mainButtonDisabled: Boolean(mainButtonDisabled) || !normalizedMainButtonEvent,
-    mainButtonEvent: normalizedMainButtonEvent,
+    mainButtonDisabled: Boolean(mainButtonDisabled) || !configuredMainButtonEvent,
+    mainButtonEvent: configuredMainButtonEvent || defaultMainButtonEvent(),
     subButtonText: trimString(subButtonText) || "打开 1Panel",
     subButtonDisabled: Boolean(subButtonDisabled),
     subButtonUrl: trimString(subButtonUrl) || normalizedBaseUrl,
@@ -344,8 +344,8 @@ export function toFeishuTemplateVariable(message) {
     mainButtonText: message.mainButtonText,
     main_button: message.mainButtonDisabled,
     mainButton: message.mainButtonDisabled,
-    main_button_event: message.mainButtonEvent,
-    mainButtonEvent: message.mainButtonEvent,
+    main_button_event: normalizeMainButtonEvent(message.mainButtonEvent),
+    mainButtonEvent: normalizeMainButtonEvent(message.mainButtonEvent),
     sub_button_text: message.subButtonText,
     subButtonText: message.subButtonText,
     sub_button: message.subButtonDisabled,
@@ -424,11 +424,11 @@ function buildStructuredContent(lines) {
 
 function resolveButtonFields(context, status) {
   const card = context && context.card ? context.card : {};
-  const mainButtonEvent = trimString(card.mainButtonEvent);
+  const mainButtonEvent = parseMainButtonEvent(card.mainButtonEvent);
   return {
     mainButtonText: trimString(card.mainButtonText) || defaultMainButtonText(status),
     mainButtonDisabled: status === "running" || !mainButtonEvent || card.mainButtonDisabled !== false,
-    mainButtonEvent,
+    mainButtonEvent: mainButtonEvent || defaultMainButtonEvent(),
     subButtonText: trimString(card.subButtonText) || "打开 1Panel",
     subButtonDisabled: Boolean(card.subButtonDisabled),
     subButtonUrl: trimString(card.subButtonUrl) || trimString(context.consoleUrl) || trimString(context.baseUrl),
@@ -455,6 +455,47 @@ function titleStyleForStatus(status) {
     return "red";
   }
   return "green";
+}
+
+function normalizeMainButtonEvent(value) {
+  return parseMainButtonEvent(value) || defaultMainButtonEvent();
+}
+
+function parseMainButtonEvent(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (isPlainObject(value)) {
+    return value;
+  }
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const text = value.trim();
+  if (!text) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(text);
+    if (isPlainObject(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // Keep backward compatibility with older string configs while still sending an object to Feishu.
+  }
+  return {
+    action: text,
+    source: "onepanel_worker",
+  };
+}
+
+function defaultMainButtonEvent() {
+  return {};
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function buildRunningFoot(detail) {

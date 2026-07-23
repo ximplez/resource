@@ -1,7 +1,7 @@
 import { httpError } from "./errors.js";
 
 export function requireAuth(request, env) {
-  const token = env.auth && env.auth.apiToken ? env.auth.apiToken : env.API_AUTH_TOKEN;
+  const token = env && env.apiToken ? env.apiToken : env.API_AUTH_TOKEN;
   if (!token) {
     throw httpError(500, "API_AUTH_TOKEN is not configured");
   }

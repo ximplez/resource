@@ -1,7 +1,2 @@
 .idea
-docker_runner/*.json
-/onepanel_runner/.cache
 .DS_Store
-/onepanel_runner/docker_registry.json
-/onepanel_runner/onepanel_runner
-/onepanel_runner/api.json

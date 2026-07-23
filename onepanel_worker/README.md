@@ -194,13 +194,13 @@ Optional config:
     "subButtonText": "打开 1Panel",
     "subButtonUrl": "https://your-onepanel.example.com",
     "mainButtonDisabled": true,
-    "mainButtonEvent": ""
+    "mainButtonEvent": {}
   }
 }
 ```
 
 Feishu notifications are sent through `feishu_bot_gateway` `POST /send_card`, not through the old custom webhook JSON payload.
-The template should use the interactive card variables `content`, `foot`, `main_button_text`, `main_button`, `main_button_event`, `sub_button_text`, `sub_button`, `sub_button_url`, and `title_style`.
+The template should use the interactive card variables `content`, `foot`, `main_button_text`, `main_button`, `main_button_event`, `sub_button_text`, `sub_button`, `sub_button_url`, and `title_style`. `main_button_event` / `mainButtonEvent` is always sent as a JSON object.
 
 For `upgrade-container` and `create-container`, `onepanel_worker` uses a two-phase notification flow:
 
@@ -213,7 +213,7 @@ Card defaults are tuned for OnePanel operations:
 - success cards use a green header and include the final container/image/repository summary
 - failure and unhealthy health-check cards use a red header and keep the same message updated when possible
 - the secondary button opens the 1Panel console URL; if `card.subButtonUrl` is not set, it is derived from `ONEPANEL_CONFIG_JSON.baseUrl`
-- the primary callback button remains disabled unless `card.mainButtonEvent` is configured and `card.mainButtonDisabled` is explicitly `false`
+- the primary callback button remains disabled unless `card.mainButtonEvent` is configured as an object and `card.mainButtonDisabled` is explicitly `false`
 
 Required notification config for card delivery:
 
@@ -233,7 +233,7 @@ Optional gateway config:
 - `NOTIFICATION_CONFIG_JSON.card.subButtonUrl`
 - `NOTIFICATION_CONFIG_JSON.card.mainButtonText`
 - `NOTIFICATION_CONFIG_JSON.card.mainButtonDisabled`
-- `NOTIFICATION_CONFIG_JSON.card.mainButtonEvent`
+- `NOTIFICATION_CONFIG_JSON.card.mainButtonEvent` object
 - `NOTIFICATION_CONFIG_JSON.card.openId`
 - `NOTIFICATION_CONFIG_JSON.card.successFoot`
 - `NOTIFICATION_CONFIG_JSON.card.failureFoot`

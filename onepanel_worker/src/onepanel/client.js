@@ -88,6 +88,8 @@ export class OnePanelClient {
     const headers = {
       "1Panel-Token": token,
       "1Panel-Timestamp": timestamp,
+      "X-Timezone": "Asia/Shanghai",
+      "X-Timezone-Offset": "+08:00",
     };
     let requestBody = undefined;
     if (body !== undefined) {

@@ -30,7 +30,8 @@ export async function runAction(action, payload, env, options = {}) {
   const onepanel = resolveOnePanelConfig(payload, action, env);
   const context = {
     appName: notificationConfig.appName,
-    baseUrl: onepanel.baseURL,
+    baseUrl: onepanel.consoleURL || onepanel.baseURL,
+    consoleUrl: onepanel.consoleURL,
     containerName: firstNonEmpty(payload.containerName, payload.name, asObject(env.onepanel).defaultContainerName, env.DEFAULT_CONTAINER_NAME),
     card: notificationConfig.card,
   };

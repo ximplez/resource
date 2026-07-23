@@ -10,8 +10,12 @@ export function newOnePanelCardMessage({
   foot,
   mainButtonText,
   mainButtonDisabled,
+  mainButtonEvent,
   subButtonText,
   subButtonDisabled,
+  subButtonUrl,
+  openId,
+  titleStyle,
   successContent,
   failureInfo,
   status,
@@ -25,16 +29,22 @@ export function newOnePanelCardMessage({
 }) {
   const normalizedStatus = trimString(status) || (failureInfo ? "failed" : "success");
   const normalizedTitle = trimString(title) || buildDefaultTitle(action, normalizedStatus, containerName);
+  const normalizedBaseUrl = trimString(baseUrl);
+  const normalizedMainButtonEvent = trimString(mainButtonEvent);
   return {
     appName: trimString(appName) || "1PanelWorker",
     title: normalizedTitle,
     subTitle: trimString(subTitle),
     content: stringifyMessage(content),
     foot: stringifyMessage(foot),
-    mainButtonText: trimString(mainButtonText),
-    mainButtonDisabled: Boolean(mainButtonDisabled),
-    subButtonText: trimString(subButtonText),
+    mainButtonText: trimString(mainButtonText) || defaultMainButtonText(normalizedStatus),
+    mainButtonDisabled: Boolean(mainButtonDisabled) || !normalizedMainButtonEvent,
+    mainButtonEvent: normalizedMainButtonEvent,
+    subButtonText: trimString(subButtonText) || "打开 1Panel",
     subButtonDisabled: Boolean(subButtonDisabled),
+    subButtonUrl: trimString(subButtonUrl) || normalizedBaseUrl,
+    openId: trimString(openId),
+    titleStyle: trimString(titleStyle) || titleStyleForStatus(normalizedStatus),
     status: normalizedStatus,
     action: trimString(action),
     containerName: trimString(containerName),
@@ -43,7 +53,7 @@ export function newOnePanelCardMessage({
     targetImage: trimString(targetImage),
     successContent: stringifyMessage(successContent),
     failureInfo: stringifyMessage(failureInfo),
-    baseUrl: trimString(baseUrl),
+    baseUrl: normalizedBaseUrl,
     repoSync: repoSync || null,
     detail: detail || null,
     timestamp: new Date().toISOString(),
@@ -71,11 +81,8 @@ export function buildActionSuccessCardMessage(action, result, context) {
         baseUrl: context.baseUrl,
         repoSync: result.createResult.repoSync,
         content,
-        foot: context.card.successFoot,
-        mainButtonText: context.card.mainButtonText,
-        mainButtonDisabled: context.card.mainButtonDisabled,
-        subButtonText: context.card.subButtonText,
-        subButtonDisabled: context.card.subButtonDisabled,
+        foot: buildSuccessFoot(context, `容器 **${result.containerName}** 已完成自动补建，后续健康检查会继续关注运行状态。`),
+        ...resolveButtonFields(context, "success"),
         successContent: `容器 **${result.containerName}** 原本不存在，已按配置创建，镜像为 **${result.createResult.image}**。`,
         detail: {
           mode: result.mode,
@@ -105,11 +112,8 @@ export function buildActionSuccessCardMessage(action, result, context) {
       baseUrl: context.baseUrl,
       repoSync: result.repoSync,
       content,
-      foot: context.card.successFoot,
-      mainButtonText: context.card.mainButtonText,
-      mainButtonDisabled: context.card.mainButtonDisabled,
-      subButtonText: context.card.subButtonText,
-      subButtonDisabled: context.card.subButtonDisabled,
+      foot: buildSuccessFoot(context, `容器 **${result.containerName}** 已完成升级，目标镜像为 **${result.targetImage}**。`),
+      ...resolveButtonFields(context, "success"),
       successContent: `容器 **${result.containerName}** 已升级到 **${result.targetImage}**。`,
       detail: {
         mode: result.mode,
@@ -138,11 +142,8 @@ export function buildActionSuccessCardMessage(action, result, context) {
       baseUrl: context.baseUrl,
       repoSync: result.repoSync,
       content,
-      foot: context.card.successFoot,
-      mainButtonText: context.card.mainButtonText,
-      mainButtonDisabled: context.card.mainButtonDisabled,
-      subButtonText: context.card.subButtonText,
-      subButtonDisabled: context.card.subButtonDisabled,
+      foot: buildSuccessFoot(context, `容器 **${result.containerName}** 已创建完成，镜像为 **${result.image}**。`),
+      ...resolveButtonFields(context, "success"),
       successContent: `容器 **${result.containerName}** 已创建，使用镜像 **${result.image}**。`,
       detail: {
         created: result.created,
@@ -167,10 +168,7 @@ export function buildActionSuccessCardMessage(action, result, context) {
       ["1Panel 地址", context.baseUrl || "-"],
     ]),
     foot: context.card.successFoot,
-    mainButtonText: context.card.mainButtonText,
-    mainButtonDisabled: context.card.mainButtonDisabled,
-    subButtonText: context.card.subButtonText,
-    subButtonDisabled: context.card.subButtonDisabled,
+    ...resolveButtonFields(context, "success"),
     successContent: stringifyForError(result),
     detail: result,
   });
@@ -195,11 +193,8 @@ export function buildActionPreviewCardMessage(action, payload, context) {
         ["目标镜像", targetImage],
         ["1Panel 地址", context.baseUrl || "-"],
       ]),
-      foot: "⏳ **执行中**\n任务已开始，卡片结果将自动更新。",
-      mainButtonText: context.card.mainButtonText,
-      mainButtonDisabled: true,
-      subButtonText: context.card.subButtonText,
-      subButtonDisabled: context.card.subButtonDisabled,
+      foot: buildRunningFoot("正在拉取/切换镜像，完成后这张卡片会自动更新为最终结果。"),
+      ...resolveButtonFields(context, "running"),
       detail: {
         phase: "preview",
       },
@@ -225,11 +220,8 @@ export function buildActionPreviewCardMessage(action, payload, context) {
         ["镜像", image],
         ["1Panel 地址", context.baseUrl || "-"],
       ]),
-      foot: "⏳ **执行中**\n任务已开始，卡片结果将自动更新。",
-      mainButtonText: context.card.mainButtonText,
-      mainButtonDisabled: true,
-      subButtonText: context.card.subButtonText,
-      subButtonDisabled: context.card.subButtonDisabled,
+      foot: buildRunningFoot("正在同步镜像仓库并创建容器，完成后这张卡片会自动更新为最终结果。"),
+      ...resolveButtonFields(context, "running"),
       detail: {
         phase: "preview",
       },
@@ -247,11 +239,8 @@ export function buildActionPreviewCardMessage(action, payload, context) {
       ["动作", action],
       ["1Panel 地址", context.baseUrl || "-"],
     ]),
-    foot: "⏳ **执行中**\n任务已开始，卡片结果将自动更新。",
-    mainButtonText: context.card.mainButtonText,
-    mainButtonDisabled: true,
-    subButtonText: context.card.subButtonText,
-    subButtonDisabled: context.card.subButtonDisabled,
+    foot: buildRunningFoot("任务已进入 OnePanel 工作流，完成后这张卡片会自动更新。"),
+    ...resolveButtonFields(context, "running"),
     detail: {
       phase: "preview",
     },
@@ -274,11 +263,8 @@ export function buildActionFailureCardMessage(action, error, context) {
     title: `🔴 操作执行失败`,
     subTitle: `动作 ${action} 执行失败`,
     content,
-    foot: context.card.failureFoot,
-    mainButtonText: context.card.mainButtonText,
-    mainButtonDisabled: context.card.mainButtonDisabled,
-    subButtonText: context.card.subButtonText,
-    subButtonDisabled: context.card.subButtonDisabled,
+    foot: buildFailureFoot(context, "请先处理失败原因，再按相同参数重新触发 OnePanel 工作流。"),
+    ...resolveButtonFields(context, "failed"),
     containerName: context.containerName,
     baseUrl: context.baseUrl,
     failureInfo: failureMessage,
@@ -313,11 +299,10 @@ export function buildHealthCheckCardMessage(result, context) {
       ? buildHealthCheckSuccessSubtitle(result, context)
       : buildHealthCheckFailureSubtitle(result, context),
     content,
-    foot: result.healthy ? context.card.successFoot : context.card.failureFoot,
-    mainButtonText: context.card.mainButtonText,
-    mainButtonDisabled: context.card.mainButtonDisabled,
-    subButtonText: context.card.subButtonText,
-    subButtonDisabled: context.card.subButtonDisabled,
+    foot: result.healthy
+      ? buildSuccessFoot(context, summary.successContent)
+      : buildFailureFoot(context, summary.failureInfo),
+    ...resolveButtonFields(context, result.healthy ? "success" : "failed"),
     containerName: result.containerName || container.name || context.containerName,
     image: container.imageName,
     baseUrl: context.baseUrl,
@@ -359,10 +344,18 @@ export function toFeishuTemplateVariable(message) {
     mainButtonText: message.mainButtonText,
     main_button: message.mainButtonDisabled,
     mainButton: message.mainButtonDisabled,
+    main_button_event: message.mainButtonEvent,
+    mainButtonEvent: message.mainButtonEvent,
     sub_button_text: message.subButtonText,
     subButtonText: message.subButtonText,
     sub_button: message.subButtonDisabled,
     subButton: message.subButtonDisabled,
+    sub_button_url: message.subButtonUrl,
+    subButtonUrl: message.subButtonUrl,
+    open_id: message.openId,
+    openId: message.openId,
+    title_style: message.titleStyle,
+    titleStyle: message.titleStyle,
     status: message.status,
     action: message.action,
     container_name: message.containerName,
@@ -389,6 +382,9 @@ function buildDefaultTitle(action, status, containerName) {
   const actionText = trimString(action) || "操作";
   const containerText = trimString(containerName);
   const suffix = containerText ? `: ${containerText}` : "";
+  if (status === "running") {
+    return `🟡 ${actionText}${suffix}`;
+  }
   return `${status === "success" ? "🟢" : "🔴"} ${actionText}${suffix}`;
 }
 
@@ -424,6 +420,61 @@ function buildStructuredContent(lines) {
     .filter((item) => Array.isArray(item) && trimString(item[0]) && item[1] !== undefined && item[1] !== null && `${item[1]}` !== "")
     .map(([label, value]) => `- **${label}**：${value}`)
     .join("\n");
+}
+
+function resolveButtonFields(context, status) {
+  const card = context && context.card ? context.card : {};
+  const mainButtonEvent = trimString(card.mainButtonEvent);
+  return {
+    mainButtonText: trimString(card.mainButtonText) || defaultMainButtonText(status),
+    mainButtonDisabled: status === "running" || !mainButtonEvent || card.mainButtonDisabled !== false,
+    mainButtonEvent,
+    subButtonText: trimString(card.subButtonText) || "打开 1Panel",
+    subButtonDisabled: Boolean(card.subButtonDisabled),
+    subButtonUrl: trimString(card.subButtonUrl) || trimString(context.consoleUrl) || trimString(context.baseUrl),
+    openId: trimString(card.openId),
+    titleStyle: titleStyleForStatus(status),
+  };
+}
+
+function defaultMainButtonText(status) {
+  if (status === "running") {
+    return "执行中";
+  }
+  if (status === "failed") {
+    return "重试工作流";
+  }
+  return "重新执行";
+}
+
+function titleStyleForStatus(status) {
+  if (status === "running") {
+    return "yellow";
+  }
+  if (status === "failed") {
+    return "red";
+  }
+  return "green";
+}
+
+function buildRunningFoot(detail) {
+  return `⏳ **执行中**\n${detail}`;
+}
+
+function buildSuccessFoot(context, detail) {
+  const configured = trimString(context && context.card ? context.card.successFoot : "");
+  if (configured) {
+    return configured;
+  }
+  return `✅ **执行完成**\n${detail}`;
+}
+
+function buildFailureFoot(context, detail) {
+  const configured = trimString(context && context.card ? context.card.failureFoot : "");
+  if (configured) {
+    return configured;
+  }
+  return `⚠️ **需要处理**\n${detail || "请根据上方失败信息定位原因，修复后再重试。"}`;
 }
 
 function buildGroupedHealthCheckContent(result, context) {

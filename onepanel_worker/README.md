@@ -189,16 +189,31 @@ Optional config:
   "templateVersionName": "1.0.0",
   "receiveIdType": "email",
   "receiveId": "name@example.com",
-  "appName": "1PanelWorker"
+  "appName": "1PanelWorker",
+  "card": {
+    "subButtonText": "打开 1Panel",
+    "subButtonUrl": "https://your-onepanel.example.com",
+    "mainButtonDisabled": true,
+    "mainButtonEvent": ""
+  }
 }
 ```
 
 Feishu notifications are sent through `feishu_bot_gateway` `POST /send_card`, not through the old custom webhook JSON payload.
+The template should use the interactive card variables `content`, `foot`, `main_button_text`, `main_button`, `main_button_event`, `sub_button_text`, `sub_button`, `sub_button_url`, and `title_style`.
 
 For `upgrade-container` and `create-container`, `onepanel_worker` uses a two-phase notification flow:
 
 - send a preview template card first
 - after the action finishes, update the same Feishu message with the final result using the returned `messageId`
+
+Card defaults are tuned for OnePanel operations:
+
+- preview cards use a yellow header and disable the callback button while the action is running
+- success cards use a green header and include the final container/image/repository summary
+- failure and unhealthy health-check cards use a red header and keep the same message updated when possible
+- the secondary button opens the 1Panel console URL; if `card.subButtonUrl` is not set, it is derived from `ONEPANEL_CONFIG_JSON.baseUrl`
+- the primary callback button remains disabled unless `card.mainButtonEvent` is configured and `card.mainButtonDisabled` is explicitly `false`
 
 Required notification config for card delivery:
 
@@ -214,13 +229,32 @@ Optional gateway config:
 - `NOTIFICATION_CONFIG_JSON.receiveId`
 - `NOTIFICATION_CONFIG_JSON.appName`
 - `NOTIFICATION_CONFIG_JSON.enabled`
+- `NOTIFICATION_CONFIG_JSON.card.subButtonText`
+- `NOTIFICATION_CONFIG_JSON.card.subButtonUrl`
+- `NOTIFICATION_CONFIG_JSON.card.mainButtonText`
+- `NOTIFICATION_CONFIG_JSON.card.mainButtonDisabled`
+- `NOTIFICATION_CONFIG_JSON.card.mainButtonEvent`
+- `NOTIFICATION_CONFIG_JSON.card.openId`
+- `NOTIFICATION_CONFIG_JSON.card.successFoot`
+- `NOTIFICATION_CONFIG_JSON.card.failureFoot`
 
 Template variables sent to `feishu_bot_gateway` include:
 
 - `app_name` / `appName`
 - `title`
+- `sub_title` / `subTitle`
+- `title_style` / `titleStyle`
 - `status`
 - `action`
+- `content`
+- `foot`
+- `main_button_text` / `mainButtonText`
+- `main_button` / `mainButton`
+- `main_button_event` / `mainButtonEvent`
+- `sub_button_text` / `subButtonText`
+- `sub_button` / `subButton`
+- `sub_button_url` / `subButtonUrl`
+- `open_id` / `openId`
 - `container_name` / `containerName`
 - `image`
 - `current_image` / `currentImage`

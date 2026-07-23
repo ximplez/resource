@@ -61,6 +61,7 @@ export function resolveOnePanelConfig(payload, action, env) {
     apiPrefix,
     apiKey,
     baseURL: normalizeBaseURL(baseUrl, apiPrefix),
+    consoleURL: normalizeConsoleURL(baseUrl, apiPrefix),
   };
 }
 
@@ -117,6 +118,16 @@ export function resolveNotificationConfig(payload, action, env) {
     env.FEISHU_BOT_NOTIFY_ENABLED,
     undefined,
   );
+  const mainButtonDisabled = toBooleanOrUndefined(pickDefined(
+    overrideCard.mainButtonDisabled,
+    envNotificationCard.mainButtonDisabled,
+    true,
+  ));
+  const subButtonDisabled = toBooleanOrUndefined(pickDefined(
+    overrideCard.subButtonDisabled,
+    envNotificationCard.subButtonDisabled,
+    false,
+  ));
 
   return {
     enabled: enabledValue === undefined ? Boolean(gatewayBaseUrl && gatewayAuthToken && appId && templateId) : toBooleanOrUndefined(enabledValue) === true,
@@ -132,32 +143,37 @@ export function resolveNotificationConfig(payload, action, env) {
       mainButtonText: firstNonEmpty(
         overrideCard.mainButtonText,
         envNotificationCard.mainButtonText,
-        "暂不可用",
       ),
-      mainButtonDisabled: pickDefined(
-        overrideCard.mainButtonDisabled,
-        envNotificationCard.mainButtonDisabled,
-        true,
+      mainButtonDisabled: mainButtonDisabled === undefined ? true : mainButtonDisabled,
+      mainButtonEvent: firstNonEmpty(
+        overrideCard.mainButtonEvent,
+        envNotificationCard.mainButtonEvent,
       ),
       subButtonText: firstNonEmpty(
         overrideCard.subButtonText,
         envNotificationCard.subButtonText,
-        "查看说明",
+        "打开 1Panel",
       ),
-      subButtonDisabled: pickDefined(
-        overrideCard.subButtonDisabled,
-        envNotificationCard.subButtonDisabled,
-        true,
+      subButtonDisabled: subButtonDisabled === undefined ? false : subButtonDisabled,
+      subButtonUrl: firstNonEmpty(
+        overrideCard.subButtonUrl,
+        envNotificationCard.subButtonUrl,
+      ),
+      openId: firstNonEmpty(
+        overrideCard.openId,
+        envNotificationCard.openId,
+        override.openId,
+        envNotification.openId,
+        env.FEISHU_BOT_OPEN_ID,
+        receiveIdType === "open_id" ? receiveId : "",
       ),
       successFoot: firstNonEmpty(
         overrideCard.successFoot,
         envNotificationCard.successFoot,
-        "✅ **执行完成**\n请关注上方结果摘要，如需进一步处理可结合 1Panel 控制台继续排查。",
       ),
       failureFoot: firstNonEmpty(
         overrideCard.failureFoot,
         envNotificationCard.failureFoot,
-        "⚠️ **需要处理**\n请根据上方失败信息定位原因，修复后再重试。",
       ),
     },
   };
@@ -544,4 +560,18 @@ function normalizeBaseURL(baseURL, apiPrefix) {
     return trimmedBase;
   }
   return `${trimmedBase}${prefix}`;
+}
+
+function normalizeConsoleURL(baseURL, apiPrefix) {
+  const prefix = `/${trimString(apiPrefix).replace(/^\/*/, "").replace(/\/*$/, "") || "api/v1"}`;
+  const trimmedBase = trimString(baseURL).replace(/\/*$/, "");
+  if (!trimmedBase) {
+    return "";
+  }
+  for (const suffix of [prefix, "/api/v1", "/api/v2"]) {
+    if (trimmedBase.endsWith(suffix)) {
+      return trimmedBase.slice(0, -suffix.length) || trimmedBase;
+    }
+  }
+  return trimmedBase;
 }

@@ -10,5 +10,9 @@ TZ = "Asia/Shanghai"
 [observability]
 enabled = true
 
+[[services]]
+binding = "FEISHU_BOT_GATEWAY"
+service = "feishu-bot-gateway"
+
 [triggers]
 crons = ["*/30 * * * *"]

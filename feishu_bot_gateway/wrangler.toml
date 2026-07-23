@@ -4,5 +4,8 @@ compatibility_date = "2026-07-21"
 compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
+[vars]
+TZ = "Asia/Shanghai"
+
 [observability]
 enabled = true

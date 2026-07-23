@@ -3,7 +3,7 @@ import { stringifyForError, trimString } from "../lib/object.js";
 import { httpError } from "../lib/errors.js";
 import { toFeishuTemplateVariable } from "./card-message.js";
 
-export async function sendCardNotification(notificationConfig, message) {
+export async function sendCardNotification(notificationConfig, message, env) {
   if (!notificationConfig || !notificationConfig.enabled || !message) {
     return {
       attempted: false,
@@ -22,14 +22,7 @@ export async function sendCardNotification(notificationConfig, message) {
       receiveIdType: notificationConfig.receiveIdType || undefined,
       receiveId: notificationConfig.receiveId || undefined,
     };
-    const resp = await fetch(`${normalizeGatewayBaseUrl(notificationConfig.gatewayBaseUrl)}/send_card`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${notificationConfig.gatewayAuthToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const resp = await callFeishuBotGateway(notificationConfig, payload, env);
     const data = await safeJson(resp);
     if (!resp.ok || !data.success) {
       throw httpError(resp.status || 502, `feishu bot gateway send_card failed: ${stringifyForError(data)}`);
@@ -50,7 +43,7 @@ export async function sendCardNotification(notificationConfig, message) {
   }
 }
 
-export async function updateCardNotification(notificationConfig, messageId, message) {
+export async function updateCardNotification(notificationConfig, messageId, message, env) {
   if (!notificationConfig || !notificationConfig.enabled || !messageId || !message) {
     return {
       attempted: false,
@@ -68,14 +61,7 @@ export async function updateCardNotification(notificationConfig, messageId, mess
       templateVersionName: notificationConfig.templateVersionName || undefined,
       templateVariable: toFeishuTemplateVariable(message),
     };
-    const resp = await fetch(`${normalizeGatewayBaseUrl(notificationConfig.gatewayBaseUrl)}/send_card`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${notificationConfig.gatewayAuthToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const resp = await callFeishuBotGateway(notificationConfig, payload, env);
     const data = await safeJson(resp);
     if (!resp.ok || !data.success) {
       throw httpError(resp.status || 502, `feishu bot gateway update card failed: ${stringifyForError(data)}`);
@@ -111,6 +97,21 @@ function validateGatewayConfig(config) {
   if (!trimString(config.templateId)) {
     throw httpError(500, "FEISHU_BOT_TEMPLATE_ID is not configured");
   }
+}
+
+async function callFeishuBotGateway(config, payload, env) {
+  const request = new Request(`${normalizeGatewayBaseUrl(config.gatewayBaseUrl || "https://service-binding.local")}/send_card`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${config.gatewayAuthToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (env && env.FEISHU_BOT_GATEWAY && typeof env.FEISHU_BOT_GATEWAY.fetch === "function") {
+    return await env.FEISHU_BOT_GATEWAY.fetch(request);
+  }
+  return await fetch(request);
 }
 
 function normalizeGatewayBaseUrl(baseUrl) {

@@ -40,19 +40,19 @@ export async function runAction(action, payload, env, options = {}) {
   try {
     if (shouldUsePreviewUpdateFlow) {
       const previewMessage = buildActionPreviewCardMessage(action, payload, context);
-      previewNotification = await sendCardNotification(notificationConfig, previewMessage);
+      previewNotification = await sendCardNotification(notificationConfig, previewMessage, env);
     }
     const result = await dispatchAction(action, payload, env, options);
     if (notificationConfig.enabled && shouldNotifyFailureResult(action, result, notifyOnFailure)) {
       const message = buildHealthCheckFailureCardMessage(result, context);
-      result.notification = await sendCardNotification(notificationConfig, message);
+      result.notification = await sendCardNotification(notificationConfig, message, env);
       return result;
     }
     if (notificationConfig.enabled && shouldNotifySuccess(action, result, notifyOnSuccess)) {
       const message = buildActionSuccessCardMessage(action, result, context);
       result.notification = previewNotification && previewNotification.sent && previewNotification.messageId
-        ? await updateCardNotification(notificationConfig, previewNotification.messageId, message)
-        : await sendCardNotification(notificationConfig, message);
+        ? await updateCardNotification(notificationConfig, previewNotification.messageId, message, env)
+        : await sendCardNotification(notificationConfig, message, env);
       if (previewNotification) {
         result.previewNotification = previewNotification;
       }
@@ -62,8 +62,8 @@ export async function runAction(action, payload, env, options = {}) {
     if (notificationConfig.enabled && notifyOnFailure) {
       const message = buildActionFailureCardMessage(action, error, context);
       error.notification = previewNotification && previewNotification.sent && previewNotification.messageId
-        ? await updateCardNotification(notificationConfig, previewNotification.messageId, message)
-        : await sendCardNotification(notificationConfig, message);
+        ? await updateCardNotification(notificationConfig, previewNotification.messageId, message, env)
+        : await sendCardNotification(notificationConfig, message, env);
       if (previewNotification) {
         error.previewNotification = previewNotification;
       }

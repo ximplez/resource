@@ -1,8 +1,8 @@
 # onepanel_worker
 
-Cloudflare Worker version of `onepanel_runner`.
+Cloudflare Worker for request-driven 1Panel automation.
 
-It keeps the same core actions:
+It provides the core actions:
 
 - `upgrade-container`
 - `create-container`
@@ -17,11 +17,9 @@ It also keeps the private registry sync behavior:
 - update existing repo credentials from config when status is not `Success`
 - create a new repo from config when 1Panel does not have that registry yet
 
-## Why a separate Worker
+## Runtime model
 
-The original Go runner reads local files and exits as a CLI process.
-
-The Worker version is request driven:
+The Worker is request driven:
 
 - local file input becomes JSON request payload or Worker secrets
 - CLI flags become HTTP fields
@@ -234,7 +232,7 @@ Template variables sent to `feishu_bot_gateway` include:
 - `detail`
 - `repo_sync` / `repoSync`
 
-`DOCKER_REGISTRY_CONFIG_JSON` uses the same top-level object shape as the Go runner:
+`DOCKER_REGISTRY_CONFIG_JSON` uses this top-level object shape:
 
 ```json
 {
@@ -298,6 +296,6 @@ npm run dev
 ## Notes
 
 - The Worker cannot read local `container.json` or `docker_registry.json` files at runtime. Pass those values in the request body or store them in Worker secrets.
-- The 1Panel auth token is generated in Worker code using the same `md5("1panel" + apiKey + timestamp)` rule as the Go runner.
+- The 1Panel auth token is generated in Worker code with `md5("1panel" + apiKey + timestamp)`.
 - Notifications use a dedicated card message model and call `feishu_bot_gateway` `/send_card`.
 - `templateId` should be managed in config, not hardcoded in request payloads.

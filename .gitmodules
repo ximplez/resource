@@ -1,6 +1,6 @@
 [submodule "Auto-wxread"]
 	path = Auto-wxread
-	url = git@github.com:ximplez/Auto-wxread.git
+	url = https://github.com/ximplez/Auto-wxread.git
 [submodule "right-signin"]
 	path = right-signin
-	url = git@github.com:ximplez/right-signin.git
+	url = https://github.com/ximplez/right-signin.git

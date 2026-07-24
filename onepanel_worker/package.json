@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "node --input-type=module -e 'await import(\"./src/index.js\")'"
+    "check": "node --input-type=module -e 'await import(\"./src/index.js\")'",
+    "test": "node --test"
   },
   "devDependencies": {
-    "wrangler": "^4.25.0"
+    "wrangler": "^4.70.0"
   }
 }

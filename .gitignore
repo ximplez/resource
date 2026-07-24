@@ -1,2 +1,4 @@
 .idea
 .DS_Store
+/onepanel_worker/api.json
+/onepanel_worker/local.env.json

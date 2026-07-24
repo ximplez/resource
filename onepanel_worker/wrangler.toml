@@ -2,15 +2,11 @@ name = "onepanel-worker"
 main = "src/index.js"
 compatibility_date = "2026-07-21"
 compatibility_flags = ["nodejs_compat"]
+# Cloudflare Git builds must preserve existing dashboard secret bindings.
+keep_vars = true
 
 [vars]
 TZ = "Asia/Shanghai"
-
-[secrets]
-required = [
-  "API_AUTH_TOKEN",
-  "ONEPANEL_CONFIG_JSON",
-]
 
 [observability]
 enabled = true

@@ -2,16 +2,71 @@ import { httpError } from "./errors.js";
 
 export const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
 
-export async function readJson(request) {
-  const length = Number(request.headers.get("content-length") || "0");
-  if (length > DEFAULT_MAX_BODY_BYTES) {
-    throw httpError(413, "request body is too large");
-  }
+export async function readJson(request, maxBytes = DEFAULT_MAX_BODY_BYTES) {
+  const bytes = await readRequestBytes(request, maxBytes);
+  const text = new TextDecoder().decode(bytes);
   try {
-    return await request.json();
+    return JSON.parse(text);
   } catch {
     throw httpError(400, "invalid JSON body");
   }
+}
+
+export async function readFormData(request, maxBytes) {
+  const bytes = await readRequestBytes(request, maxBytes);
+  const contentType = request.headers.get("content-type") || "";
+  try {
+    return await new Response(bytes, {
+      headers: {
+        "Content-Type": contentType,
+      },
+    }).formData();
+  } catch {
+    throw httpError(400, "invalid multipart form body");
+  }
+}
+
+export function isMultipartRequest(request) {
+  const contentType = request.headers.get("content-type") || "";
+  return contentType.toLowerCase().startsWith("multipart/form-data");
+}
+
+async function readRequestBytes(request, maxBytes) {
+  const length = Number(request.headers.get("content-length") || "0");
+  if (length > maxBytes) {
+    throw httpError(413, "request body is too large");
+  }
+  if (!request.body || typeof request.body.getReader !== "function") {
+    const bytes = new Uint8Array(await request.arrayBuffer());
+    if (bytes.byteLength > maxBytes) {
+      throw httpError(413, "request body is too large");
+    }
+    return bytes;
+  }
+
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw httpError(413, "request body is too large");
+    }
+    chunks.push(value);
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
 }
 
 export async function safeJson(resp) {

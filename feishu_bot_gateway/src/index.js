@@ -5,6 +5,8 @@ import { requireAuth } from "./validators/auth.js";
 import { validateSendPayload } from "./validators/message.js";
 import { validateTemplateCardPayload } from "./validators/card.js";
 import { sendMessage, sendTemplateCard } from "./services/message-service.js";
+import { uploadCardImages, uploadImage } from "./services/image-service.js";
+import { parseCardRequest, parseUploadImageRequest } from "./services/image-request.js";
 
 export default {
   async fetch(request, env) {
@@ -27,14 +29,27 @@ export default {
           data: result,
         });
       }
-      if (request.method === "POST" && url.pathname === "/send_card") {
+      if (request.method === "POST" && url.pathname === "/upload_image") {
         requireAuth(request, env);
-        const payload = await readJson(request);
-        validateTemplateCardPayload(payload, env, getDefaultReceiveIdType, getDefaultReceiveId);
-        const result = await sendTemplateCard(payload, env);
+        const payload = await parseUploadImageRequest(request);
+        const result = await uploadImage(payload, env);
         return json({
           success: true,
           data: result,
+        });
+      }
+      if (request.method === "POST" && url.pathname === "/send_card") {
+        requireAuth(request, env);
+        const payload = await parseCardRequest(request);
+        validateTemplateCardPayload(payload, env, getDefaultReceiveIdType, getDefaultReceiveId);
+        const prepared = await uploadCardImages(payload, env);
+        const result = await sendTemplateCard(prepared.payload, env);
+        return json({
+          success: true,
+          data: {
+            ...result,
+            images: prepared.images,
+          },
         });
       }
 

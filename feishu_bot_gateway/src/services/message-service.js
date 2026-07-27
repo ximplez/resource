@@ -1,10 +1,10 @@
 import { getDefaultReceiveId, getDefaultReceiveIdType } from "../config/apps.js";
-import { getLarkClient, unwrapLarkResponse } from "./lark-client.js";
+import { callLark, getLarkClient, unwrapLarkResponse } from "./lark-client.js";
 import { buildTemplateCardContent, parseTemplateCardContent } from "./card-content.js";
 
 export async function sendMessage(payload, env) {
   const client = await getLarkClient(payload.appId, env);
-  const res = await client.im.message.create({
+  const res = await callLark("feishu send message failed", () => client.im.message.create({
     params: {
       receive_id_type: payload.receiveIdType,
     },
@@ -13,7 +13,7 @@ export async function sendMessage(payload, env) {
       msg_type: payload.msgType,
       content: JSON.stringify(payload.content),
     },
-  });
+  }));
   const data = unwrapLarkResponse(res, "feishu send message failed");
   return {
     messageId: data && data.message_id ? data.message_id : "",
@@ -33,7 +33,7 @@ export async function sendTemplateCard(payload, env) {
   const receiveId = payload.receiveId || getDefaultReceiveId(payload.appId, env);
   let res;
   if (payload.content) {
-    res = await client.im.message.create({
+    res = await callLark("feishu send card failed", () => client.im.message.create({
       params: {
         receive_id_type: receiveIdType,
       },
@@ -42,9 +42,9 @@ export async function sendTemplateCard(payload, env) {
         msg_type: "interactive",
         content: JSON.stringify(parseTemplateCardContent(payload.content)),
       },
-    });
+    }));
   } else {
-    res = await client.im.message.createByCard({
+    res = await callLark("feishu send card failed", () => client.im.message.createByCard({
       params: {
         receive_id_type: receiveIdType,
       },
@@ -54,7 +54,7 @@ export async function sendTemplateCard(payload, env) {
         template_version_name: payload.templateVersionName || undefined,
         template_variable: payload.templateVariable || {},
       },
-    });
+    }));
   }
   const data = unwrapLarkResponse(res, "feishu send card failed");
   return {
@@ -69,14 +69,14 @@ export async function sendTemplateCard(payload, env) {
 export async function updateTemplateCard(payload, env) {
   const client = await getLarkClient(payload.appId, env);
   const content = buildTemplateCardContent(payload);
-  const res = await client.im.message.patch({
+  const res = await callLark("feishu update card failed", () => client.im.message.patch({
     path: {
       message_id: payload.messageId,
     },
     data: {
       content: JSON.stringify(content),
     },
-  });
+  }));
   const data = unwrapLarkResponse(res, "feishu update card failed");
   return {
     messageId: payload.messageId,

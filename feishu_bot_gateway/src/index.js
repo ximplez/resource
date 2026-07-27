@@ -4,6 +4,10 @@ import { json, readJson, withCors } from "./lib/http.js";
 import { requireAuth } from "./validators/auth.js";
 import { validateSendPayload } from "./validators/message.js";
 import { validateTemplateCardPayload } from "./validators/card.js";
+import {
+  fillMissingTemplateSchemaImages,
+  validateTemplateSchemaVariables,
+} from "./validators/template-schema.js";
 import { sendMessage, sendTemplateCard } from "./services/message-service.js";
 import { uploadCardImages, uploadImage } from "./services/image-service.js";
 import { parseCardRequest, parseUploadImageRequest } from "./services/image-request.js";
@@ -40,9 +44,10 @@ export default {
       }
       if (request.method === "POST" && url.pathname === "/send_card") {
         requireAuth(request, env);
-        const payload = await parseCardRequest(request);
+        const payload = fillMissingTemplateSchemaImages(await parseCardRequest(request), env);
         validateTemplateCardPayload(payload, env, getDefaultReceiveIdType, getDefaultReceiveId);
         const prepared = await uploadCardImages(payload, env);
+        validateTemplateSchemaVariables(prepared.payload, env);
         const result = await sendTemplateCard(prepared.payload, env);
         return json({
           success: true,

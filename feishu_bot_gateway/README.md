@@ -411,6 +411,7 @@ curl -X POST 'https://your-worker.example.workers.dev/send_card' \
 
 - [上传图片](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/image/create)
 - [卡片图片组件](https://open.feishu.cn/document/feishu-cards/feishu-card-cardkit/components/image)
+- [配置卡片变量](https://open.feishu.cn/document/feishu-cards/feishu-card-cardkit/configure-card-variables)
 
 ## 配置
 
@@ -437,6 +438,77 @@ wrangler secret put FEISHU_APPS_JSON
   }
 }
 ```
+
+### 模板结构校验
+
+gateway 默认不会读取飞书远程模板结构，也不会阻断未配置结构的模板请求。需要提前发现强类型变量错误时，可以在 Cloudflare Worker 变量中按模板 ID 配置卡片结构 JSON。变量名格式为：
+
+```text
+CARD_TEMPLATE_SCHEMA_<templateId>
+```
+
+例如模板 ID 为 `AAqWXbpoNRj3B` 时，对应变量名为：
+
+```text
+CARD_TEMPLATE_SCHEMA_AAqWXbpoNRj3B
+```
+
+变量值填写卡片搭建工具导出的完整 schema JSON 字符串。gateway 只在命中对应变量时进行补齐和校验；没有配置、模板 ID 不匹配或使用其它模板时，会跳过模板结构处理并保持原有发送行为。
+
+当前只校验会导致飞书卡片创建或更新失败的强类型变量：
+
+- 图片组件 `img_key` 绑定的 `Image` 变量：最终模板变量必须是 `{ "img_key": "img_v3_xxx" }`
+- `disabled`、`preview`、`transparent` 等布尔字段绑定的变量：必须是 `boolean`
+- 回调按钮 `behaviors[].value` 绑定的变量：必须是对象
+
+普通 markdown、plain_text、URL、颜色、样式等字符串变量不做强校验，避免把可容错的文案缺省变成 gateway 阻断。
+
+配置示例：
+
+```toml
+[vars]
+CARD_TEMPLATE_SCHEMA_AAqWXbpoNRj3B = """
+{
+  "schema": "2.0",
+  "body": {
+    "elements": [
+      {
+        "tag": "img",
+        "img_key": "${content_image}"
+      },
+      {
+        "tag": "button",
+        "disabled": "${main_button}",
+        "behaviors": [
+          {
+            "type": "callback",
+            "value": "${main_button_event}"
+          }
+        ]
+      }
+    ]
+  }
+}
+"""
+```
+
+如果模板中包含图片组件并绑定了 `content_image`，调用方可以通过 `images` 上传真实图片。若请求没有传 `content_image` 模板变量，也没有在 `images` 中声明该变量，gateway 会根据模板结构自动追加一个空图片源，并注入透明占位图。
+
+自动补齐严格按模板中的图片变量名执行。例如模板同时包含 `img_key: "${content_image}"` 和 `img_key: "${detail_image}"` 时，gateway 会分别检查这两个变量；调用方已经通过 `templateVariable` 或 `images` 传入的图片变量不会重复补齐，只会为缺失的图片变量追加占位图。
+
+```json
+{
+  "templateId": "AAqWXbpoNRj3B",
+  "templateVariable": {
+    "main_button": true,
+    "main_button_event": {
+      "action": "noop"
+    }
+  }
+}
+```
+
+如果没有配置对应的 `CARD_TEMPLATE_SCHEMA_<templateId>`，gateway 无法知道模板里有哪些图片变量，此时仍需要调用方显式传 `images: [{ "variable": "content_image" }]` 才能触发透明占位图。
 
 可选配置 KV 缓存 tenant token：
 

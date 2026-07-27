@@ -35,6 +35,28 @@ export function unwrapLarkResponse(resp, prefix) {
   return resp.data || {};
 }
 
+export async function formatLarkPayload(appId, env, payload = {}, options = {}) {
+  const client = await getLarkClient(appId, env);
+  return await client.formatPayload(payload, options);
+}
+
+export async function requestLark(appId, env, request, payload = {}, options = {}) {
+  const client = await getLarkClient(appId, env);
+  const formatted = await client.formatPayload(payload, options);
+  return await client.httpInstance.request({
+    ...request,
+    params: {
+      ...formatted.params,
+      ...(request.params || {}),
+    },
+    headers: {
+      ...formatted.headers,
+      ...(request.headers || {}),
+    },
+    data: request.data === undefined ? formatted.data : request.data,
+  });
+}
+
 async function getLarkSdk() {
   if (!larkSdkPromise) {
     // The SDK reads __dirname at module initialization. Cloudflare Workers do

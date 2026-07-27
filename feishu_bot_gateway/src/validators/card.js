@@ -1,5 +1,6 @@
 import { requiredString, httpError } from "../lib/errors.js";
 import { DEFAULT_MAX_BODY_BYTES } from "../lib/http.js";
+import { validateCardImages } from "./image.js";
 
 export function validateTemplateCardPayload(payload, env, getDefaultReceiveIdType, getDefaultReceiveId) {
   if (!payload || typeof payload !== "object") {
@@ -27,6 +28,14 @@ export function validateTemplateCardContentFields(payload) {
   if (!payload.content) {
     requiredString(payload.templateId, "templateId");
   }
+  if (payload.content !== undefined) {
+    const contentSize = typeof payload.content === "string"
+      ? payload.content.length
+      : JSON.stringify(payload.content).length;
+    if (contentSize > DEFAULT_MAX_BODY_BYTES) {
+      throw httpError(400, "content is too large");
+    }
+  }
   if (payload.templateVariable !== undefined) {
     if (!payload.templateVariable || typeof payload.templateVariable !== "object" || Array.isArray(payload.templateVariable)) {
       throw httpError(400, "templateVariable must be a JSON object");
@@ -38,4 +47,5 @@ export function validateTemplateCardContentFields(payload) {
   if (payload.templateVersionName !== undefined && typeof payload.templateVersionName !== "string") {
     throw httpError(400, "templateVersionName must be a string");
   }
+  validateCardImages(payload.images);
 }

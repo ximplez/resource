@@ -12,7 +12,7 @@ export function validateSendPayload(payload) {
   if (!["open_id", "user_id", "union_id", "email", "chat_id"].includes(payload.receiveIdType)) {
     throw httpError(400, "unsupported receiveIdType");
   }
-  if (!["text", "post", "interactive"].includes(payload.msgType)) {
+  if (!["text", "post", "interactive", "image"].includes(payload.msgType)) {
     throw httpError(400, "unsupported msgType");
   }
   if (!payload.content || typeof payload.content !== "object") {
@@ -23,5 +23,12 @@ export function validateSendPayload(payload) {
   }
   if (payload.msgType === "text" && typeof payload.content.text !== "string") {
     throw httpError(400, "text message content.text is required");
+  }
+  if (payload.msgType === "image") {
+    requiredString(payload.content.image_key || payload.content.imageKey, "image message content.image_key");
+    if (!payload.content.image_key) {
+      payload.content.image_key = payload.content.imageKey;
+      delete payload.content.imageKey;
+    }
   }
 }
